@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireAdmin, requireAuth } from "@/lib/auth";
-import { actionError, actionOk, type ActionResult } from "@/lib/errors";
+import { actionError, actionOk, validationError, type ActionResult } from "@/lib/errors";
 import { appSettingsSchema, fieldErrorsFrom, profileSchema } from "@/lib/validations";
 import { updateAppSettings, updateOwnProfile } from "@/services/settings.service";
 
@@ -20,7 +20,7 @@ export async function updateProfileAction(
   });
 
   if (!parsed.success) {
-    return actionError("Please check the form", fieldErrorsFrom(parsed.error));
+    return validationError("Please check the form", fieldErrorsFrom(parsed.error));
   }
 
   try {
@@ -47,7 +47,7 @@ export async function updateAppSettingsAction(
   });
 
   if (!parsed.success) {
-    return actionError("Please check the form", fieldErrorsFrom(parsed.error));
+    return validationError("Please check the form", fieldErrorsFrom(parsed.error));
   }
 
   try {

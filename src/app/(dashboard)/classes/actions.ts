@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireAdmin, requireStaff } from "@/lib/auth";
-import { actionError, actionOk, type ActionResult } from "@/lib/errors";
+import { actionError, actionOk, validationError, type ActionResult } from "@/lib/errors";
 import { classSchema, fieldErrorsFrom } from "@/lib/validations";
 import { canEditClass } from "@/lib/permissions";
 import {
@@ -37,7 +37,7 @@ export async function createClassAction(
 
   const parsed = classSchema.safeParse(formToClassInput(formData));
   if (!parsed.success) {
-    return actionError("Please check the form", fieldErrorsFrom(parsed.error));
+    return validationError("Please check the form", fieldErrorsFrom(parsed.error));
   }
 
   try {
@@ -71,7 +71,7 @@ export async function updateClassAction(
 
   const parsed = classSchema.safeParse(formToClassInput(formData));
   if (!parsed.success) {
-    return actionError("Please check the form", fieldErrorsFrom(parsed.error));
+    return validationError("Please check the form", fieldErrorsFrom(parsed.error));
   }
 
   // A teacher must not be able to hand their class to someone else.

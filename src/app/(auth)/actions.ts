@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { siteUrl } from "@/lib/supabase/env";
-import { actionError, actionOk, type ActionResult } from "@/lib/errors";
+import { actionError, actionOk, validationError, type ActionResult } from "@/lib/errors";
 import {
   fieldErrorsFrom,
   forgotPasswordSchema,
@@ -29,7 +29,7 @@ export async function signInAction(
   });
 
   if (!parsed.success) {
-    return actionError("Please check the form", fieldErrorsFrom(parsed.error));
+    return validationError("Please check the form", fieldErrorsFrom(parsed.error));
   }
 
   let redirectTo = String(formData.get("redirectTo") ?? "/dashboard");
@@ -70,7 +70,7 @@ export async function requestPasswordResetAction(
   const parsed = forgotPasswordSchema.safeParse({ email: formData.get("email") });
 
   if (!parsed.success) {
-    return actionError("Please check the form", fieldErrorsFrom(parsed.error));
+    return validationError("Please check the form", fieldErrorsFrom(parsed.error));
   }
 
   try {
@@ -99,7 +99,7 @@ export async function updatePasswordAction(
   });
 
   if (!parsed.success) {
-    return actionError("Please check the form", fieldErrorsFrom(parsed.error));
+    return validationError("Please check the form", fieldErrorsFrom(parsed.error));
   }
 
   try {

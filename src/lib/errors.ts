@@ -74,3 +74,18 @@ export function actionError(
 ): ActionResult<never> {
   return { ok: false, error: friendlyError(error), fieldErrors };
 }
+
+/**
+ * Validation failures, where the message is already written for the user.
+ *
+ * Distinct from actionError, which runs its argument through friendlyError()
+ * to translate a raised database code. A sentence like "Please check the form"
+ * matches no code, so routing it through there would log it as an unhandled
+ * error and replace it with GENERIC_ERROR — the opposite of what was wanted.
+ */
+export function validationError(
+  message: string,
+  fieldErrors?: Record<string, string>,
+): ActionResult<never> {
+  return { ok: false, error: message, fieldErrors };
+}

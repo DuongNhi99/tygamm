@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireStaff } from "@/lib/auth";
 import { canAddStudentToClass, canRecordSessions } from "@/lib/permissions";
-import { actionError, actionOk, type ActionResult } from "@/lib/errors";
+import { actionError, actionOk, validationError, type ActionResult } from "@/lib/errors";
 import {
   bulkSessionSchema,
   createUserSchema,
@@ -51,7 +51,7 @@ export async function searchStudentsAction(
   await requireStaff();
 
   const parsed = studentSearchSchema.safeParse({ query });
-  if (!parsed.success) return actionError("Enter at least 3 characters");
+  if (!parsed.success) return validationError("Enter at least 3 characters");
 
   try {
     return actionOk(await findStudentsByContact(parsed.data.query));
@@ -105,7 +105,7 @@ export async function createAndAddStudentAction(
   });
 
   if (!parsed.success) {
-    return actionError("Please check the form", fieldErrorsFrom(parsed.error));
+    return validationError("Please check the form", fieldErrorsFrom(parsed.error));
   }
 
   try {
@@ -159,7 +159,7 @@ export async function saveSessionAction(
   });
 
   if (!parsed.success) {
-    return actionError("Please check the form", fieldErrorsFrom(parsed.error));
+    return validationError("Please check the form", fieldErrorsFrom(parsed.error));
   }
 
   // The class row is the authority on how many lessons a month has.
@@ -193,7 +193,7 @@ export async function saveMonthAction(
 
   const parsed = bulkSessionSchema.safeParse({ class_id: classId, ...input });
   if (!parsed.success) {
-    return actionError("Please check the scores", fieldErrorsFrom(parsed.error));
+    return validationError("Please check the scores", fieldErrorsFrom(parsed.error));
   }
 
   const tooHigh = parsed.data.entries.find(

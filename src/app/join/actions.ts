@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireAuth } from "@/lib/auth";
-import { actionError, actionOk, type ActionResult } from "@/lib/errors";
+import { actionError, actionOk, validationError, type ActionResult } from "@/lib/errors";
 import { joinClassSchema } from "@/lib/validations";
 
 /**
@@ -18,7 +18,7 @@ export async function joinClassAction(code: string): Promise<ActionResult<string
   await requireAuth();
 
   const parsed = joinClassSchema.safeParse({ code });
-  if (!parsed.success) return actionError("Enter a valid class code");
+  if (!parsed.success) return validationError("Enter a valid class code");
 
   try {
     const supabase = await createClient();
