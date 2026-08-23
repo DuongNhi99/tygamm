@@ -1,4 +1,4 @@
-# AbbaGuitar
+# Tygamm
 
 Class management for a guitar teaching centre — classes, rosters, attendance,
 scores and monthly progress. Next.js 16 (App Router) + Supabase (Postgres,

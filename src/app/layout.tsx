@@ -11,8 +11,8 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "AbbaGuitar",
-    template: "%s · AbbaGuitar",
+    default: "Tygamm",
+    template: "%s · Tygamm",
   },
   description:
     "Class management for guitar teaching centres — classes, students, attendance, scores and monthly progress.",

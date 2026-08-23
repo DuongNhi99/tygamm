@@ -5,7 +5,7 @@ import { LinkButton } from "@/components/ui/button";
 export default function NotFound() {
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center gap-6 bg-canvas px-4 text-center">
-      <Link href="/dashboard" aria-label="AbbaGuitar home">
+      <Link href="/dashboard" aria-label="Tygamm home">
         <Logo />
       </Link>
 

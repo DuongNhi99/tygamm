@@ -16,7 +16,7 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error("[abbaguitar] render error:", error);
+    console.error("[tygamm] render error:", error);
   }, [error]);
 
   return (

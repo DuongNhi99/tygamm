@@ -79,7 +79,7 @@ export default async function SettingsPage() {
         )}
 
         <p className="pb-2 text-center text-xs text-ink-subtle">
-          AbbaGuitar ·{" "}
+          Tygamm ·{" "}
           <Link href="/dashboard" className="hover:text-ink">
             Back to dashboard
           </Link>

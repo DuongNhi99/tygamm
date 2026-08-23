@@ -6,7 +6,7 @@ import type { AppSettingsInput, ProfileInput } from "@/lib/validations";
 
 const FALLBACK: AppSettingsRow = {
   id: 1,
-  center_name: "AbbaGuitar",
+  center_name: "Tygamm",
   default_sessions_per_month: 8,
   updated_at: new Date().toISOString(),
 };

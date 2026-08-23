@@ -27,7 +27,7 @@ export async function generateMetadata({
 
     return {
       title: `Join ${klass.name}`,
-      description: `${klass.name} (${klass.code}) — ${klass.sessions_per_month} lessons per month with ${klass.teacher_name ?? "AbbaGuitar"}.`,
+      description: `${klass.name} (${klass.code}) — ${klass.sessions_per_month} lessons per month with ${klass.teacher_name ?? "Tygamm"}.`,
     };
   } catch {
     return { title: "Join a class" };
@@ -44,7 +44,7 @@ export default async function JoinClassPage({
   return (
     <div className="flex min-h-dvh flex-col bg-canvas">
       <header className="px-4 py-6 sm:px-8">
-        <Link href="/dashboard" aria-label="AbbaGuitar home">
+        <Link href="/dashboard" aria-label="Tygamm home">
           <Logo />
         </Link>
       </header>

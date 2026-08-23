@@ -53,7 +53,7 @@ export function friendlyError(error: unknown): string {
   }
 
   // Unknown failure: keep the detail in the server log, not on the screen.
-  console.error("[abbaguitar] unhandled error:", raw);
+  console.error("[tygamm] unhandled error:", raw);
   return GENERIC_ERROR;
 }
 

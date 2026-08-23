@@ -34,7 +34,7 @@ export function DashboardShell({
       {/* Desktop sidebar */}
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-line bg-card lg:flex">
         <div className="px-5 py-5">
-          <Link href="/dashboard" aria-label="AbbaGuitar dashboard">
+          <Link href="/dashboard" aria-label="Tygamm dashboard">
             <Logo />
           </Link>
         </div>
@@ -52,7 +52,7 @@ export function DashboardShell({
         <header className="sticky top-0 z-20 flex h-16 items-center gap-2 border-b border-line bg-card/90 px-4 backdrop-blur sm:px-6">
           <MobileDrawer role={role} />
 
-          <Link href="/dashboard" className="lg:hidden" aria-label="AbbaGuitar dashboard">
+          <Link href="/dashboard" className="lg:hidden" aria-label="Tygamm dashboard">
             <Logo showText={false} />
           </Link>
 

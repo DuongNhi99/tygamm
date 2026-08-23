@@ -21,7 +21,7 @@ export function Logo({ className, showText = true }: { className?: string; showT
         </svg>
       </span>
       {showText && (
-        <span className="text-lg font-semibold tracking-tight text-ink">AbbaGuitar</span>
+        <span className="text-lg font-semibold tracking-tight text-ink">Tygamm</span>
       )}
     </span>
   );

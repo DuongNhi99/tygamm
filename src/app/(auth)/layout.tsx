@@ -5,7 +5,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   return (
     <div className="flex min-h-dvh flex-col bg-canvas">
       <header className="px-4 py-6 sm:px-8">
-        <Link href="/login" className="inline-block" aria-label="AbbaGuitar home">
+        <Link href="/login" className="inline-block" aria-label="Tygamm home">
           <Logo />
         </Link>
       </header>
@@ -15,7 +15,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       </main>
 
       <footer className="px-4 py-6 text-center text-xs text-ink-subtle">
-        AbbaGuitar · Class management for music teaching centres
+        Tygamm · Class management for music teaching centres
       </footer>
     </div>
   );

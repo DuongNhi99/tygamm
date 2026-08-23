@@ -108,7 +108,7 @@ declare
   v_idx        integer;
 begin
   -- ----------------------------------------------------------------- people
-  v_admin    := public.seed_user('admin@example.com',    'Password123!', 'Admin AbbaGuitar', 'ADMIN',   '0900000001');
+  v_admin    := public.seed_user('admin@example.com',    'Password123!', 'Admin Tygamm', 'ADMIN',   '0900000001');
   v_teacher1 := public.seed_user('teacher@example.com',  'Password123!', 'Nguyen Van A',     'TEACHER', '0900000002');
   v_teacher2 := public.seed_user('teacher2@example.com', 'Password123!', 'Tran Thi B',       'TEACHER', '0900000003');
 
