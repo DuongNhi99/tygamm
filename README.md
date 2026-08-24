@@ -40,6 +40,8 @@ supabase/migrations/004_lesson_sessions.sql
 supabase/migrations/005_monthly_progress.sql
 supabase/migrations/006_app_settings.sql
 supabase/migrations/007_rls.sql
+supabase/migrations/008_rebrand_center_name.sql
+supabase/migrations/009_profile_locale.sql
 ```
 
 Or, with the Supabase CLI linked to the project: `supabase db push`.
