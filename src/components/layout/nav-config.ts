@@ -1,12 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import {
-  BarChart3,
-  BookOpen,
-  GraduationCap,
-  LayoutDashboard,
-  Settings,
-  Users,
-} from "lucide-react";
+import { BarChart3, BookOpen, GraduationCap, LayoutDashboard, Settings, Users } from "lucide-react";
 import type { Role } from "@/types/database";
 
 export interface NavItem {
@@ -92,9 +85,14 @@ export function navGroupsForRole(role: Role): NavGroup[] {
   })).filter((group) => group.items.length > 0);
 }
 
-/** The four most useful destinations on a phone's bottom bar (§51). */
+/**
+ * The phone bottom bar (§51). It is the only navigation on mobile, so it
+ * carries every destination the role has rather than a truncated few —
+ * except Settings, which already sits in the account menu and would
+ * otherwise push admins to a sixth cramped column.
+ */
 export function primaryNavForRole(role: Role): NavItem[] {
   return navGroupsForRole(role)
     .flatMap((group) => group.items)
-    .slice(0, 4);
+    .filter((item) => item.href !== "/settings");
 }
