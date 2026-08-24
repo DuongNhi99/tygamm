@@ -13,6 +13,8 @@ import { Dropdown, DropdownItem } from "@/components/ui/dropdown";
 import { Table, TBody, TD, TH, THead, TR, TableWrapper } from "@/components/ui/table";
 import { formatPercent, formatScore, scoreTone } from "@/lib/utils";
 import { removeStudentFromClassAction } from "@/app/(dashboard)/classes/[classId]/actions";
+import { useDict } from "@/lib/i18n/client";
+import { interpolate } from "@/lib/i18n/translate";
 import type { ClassStudent } from "@/types/student";
 
 /**
@@ -30,6 +32,7 @@ export function ClassStudents({
   canManage: boolean;
 }) {
   const router = useRouter();
+  const dict = useDict();
   const [pendingRemoval, setPendingRemoval] = useState<ClassStudent | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -40,7 +43,7 @@ export function ClassStudents({
     startTransition(async () => {
       const result = await removeStudentFromClassAction(classId, student.student_id);
       if (result.ok) {
-        toast.success(`${student.full_name} removed from the class`);
+        toast.success(interpolate(dict.classes.students.removed, { name: student.full_name }));
         setPendingRemoval(null);
         router.refresh();
       } else {
@@ -56,13 +59,13 @@ export function ClassStudents({
         <Table>
           <THead>
             <TR className="hover:bg-transparent">
-              <TH>Student</TH>
-              <TH>Email</TH>
-              <TH>Phone</TH>
-              <TH>Attendance</TH>
-              <TH>Average</TH>
-              <TH>Status</TH>
-              {canManage && <TH className="w-12 text-right">Actions</TH>}
+              <TH>{dict.classes.sessions.student}</TH>
+              <TH>{dict.common.email}</TH>
+              <TH>{dict.common.phone}</TH>
+              <TH>{dict.common.attendance}</TH>
+              <TH>{dict.common.average}</TH>
+              <TH>{dict.common.status}</TH>
+              {canManage && <TH className="w-12 text-right">{dict.common.actions}</TH>}
             </TR>
           </THead>
           <TBody>
@@ -89,14 +92,16 @@ export function ClassStudents({
                 </TD>
                 <TD>
                   <Badge tone={student.member_status === "ACTIVE" ? "success" : "neutral"}>
-                    {student.member_status === "ACTIVE" ? "Active" : "Removed"}
+                    {student.member_status === "ACTIVE" ? dict.common.active : dict.common.removed}
                   </Badge>
                 </TD>
                 {canManage && (
                   <TD className="text-right">
                     {student.member_status === "ACTIVE" && (
                       <Dropdown
-                        label={`Actions for ${student.full_name}`}
+                        label={interpolate(dict.classes.students.actionsFor, {
+                          name: student.full_name,
+                        })}
                         trigger={<MoreVertical className="h-4 w-4" />}
                       >
                         {(close) => (
@@ -108,7 +113,7 @@ export function ClassStudents({
                             }}
                           >
                             <UserMinus className="h-4 w-4" />
-                            Remove from class
+                            {dict.classes.students.removeAction}
                           </DropdownItem>
                         )}
                       </Dropdown>
@@ -140,7 +145,9 @@ export function ClassStudents({
                 </div>
                 {canManage && student.member_status === "ACTIVE" && (
                   <Dropdown
-                    label={`Actions for ${student.full_name}`}
+                    label={interpolate(dict.classes.students.actionsFor, {
+                      name: student.full_name,
+                    })}
                     trigger={<MoreVertical className="h-4 w-4" />}
                   >
                     {(close) => (
@@ -152,7 +159,7 @@ export function ClassStudents({
                         }}
                       >
                         <UserMinus className="h-4 w-4" />
-                        Remove from class
+                        {dict.classes.students.removeAction}
                       </DropdownItem>
                     )}
                   </Dropdown>
@@ -161,7 +168,7 @@ export function ClassStudents({
 
               <dl className="grid grid-cols-2 gap-3 border-t border-line pt-3 text-sm">
                 <div>
-                  <dt className="text-xs text-ink-subtle">Average score</dt>
+                  <dt className="text-xs text-ink-subtle">{dict.classes.students.averageScore}</dt>
                   <dd className="mt-0.5">
                     <Badge tone={scoreTone(student.average_score)}>
                       {formatScore(student.average_score)}
@@ -169,7 +176,7 @@ export function ClassStudents({
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-xs text-ink-subtle">Attendance</dt>
+                  <dt className="text-xs text-ink-subtle">{dict.common.attendance}</dt>
                   <dd className="mt-0.5 font-medium text-ink tabular-nums">
                     {formatPercent(student.attendance_rate, 1)}
                   </dd>
@@ -185,9 +192,11 @@ export function ClassStudents({
         onClose={() => setPendingRemoval(null)}
         onConfirm={remove}
         loading={isPending}
-        title="Remove this student?"
-        description={`${pendingRemoval?.full_name ?? "This student"} will be removed from the class. Their recorded lessons and scores are kept.`}
-        confirmLabel="Remove student"
+        title={dict.classes.students.removeTitle}
+        description={interpolate(dict.classes.students.removeBody, {
+          name: pendingRemoval?.full_name ?? dict.classes.students.removeBodyFallback,
+        })}
+        confirmLabel={dict.classes.students.removeConfirm}
       />
     </>
   );

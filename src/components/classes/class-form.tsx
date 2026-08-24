@@ -12,11 +12,10 @@ import {
   suggestClassCodeAction,
   updateClassAction,
 } from "@/app/(dashboard)/classes/actions";
-import { CLASS_TYPE_DESCRIPTIONS, CLASS_TYPE_LABELS } from "@/types/class";
+import { CLASS_TYPES } from "@/types/class";
+import { useDict } from "@/lib/i18n/client";
 import type { ClassRow, ClassType } from "@/types/database";
 import type { ActionResult } from "@/lib/errors";
-
-const CLASS_TYPES: ClassType[] = ["ONE_TO_ONE", "ONE_TO_TWO", "GROUP"];
 
 export function ClassForm({
   klass,
@@ -30,6 +29,7 @@ export function ClassForm({
   canReassignTeacher: boolean;
 }) {
   const router = useRouter();
+  const dict = useDict();
   const isEdit = Boolean(klass);
 
   const action = isEdit
@@ -52,10 +52,10 @@ export function ClassForm({
 
   useEffect(() => {
     if (state?.ok) {
-      toast.success(isEdit ? "Class updated" : "Class created successfully");
+      toast.success(isEdit ? dict.classes.form.updated : dict.classes.form.created);
       router.push(`/classes/${state.data}`);
     }
-  }, [state, isEdit, router]);
+  }, [state, isEdit, router, dict]);
 
   // Capacity is implied by the class type for the two fixed shapes; only a
   // group class lets the admin choose (§12).
@@ -84,23 +84,23 @@ export function ClassForm({
             </div>
           )}
 
-          <Field label="Class name" htmlFor="name" error={fieldErrors.name} required>
+          <Field label={dict.classes.form.name} htmlFor="name" error={fieldErrors.name} required>
             <Input
               id="name"
               name="name"
               value={name}
               onChange={(event) => setName(event.target.value)}
-              placeholder="Guitar Beginner"
+              placeholder={dict.classes.form.namePlaceholder}
               required
               aria-invalid={Boolean(fieldErrors.name)}
             />
           </Field>
 
           <Field
-            label="Class code"
+            label={dict.classes.form.code}
             htmlFor="code"
             error={fieldErrors.code}
-            hint="Students use this code to join. It must be unique."
+            hint={dict.classes.form.codeHint}
             required
           >
             <div className="flex gap-2">
@@ -109,7 +109,7 @@ export function ClassForm({
                 name="code"
                 value={code}
                 onChange={(event) => setCode(event.target.value.toUpperCase())}
-                placeholder="GT-BG-0826"
+                placeholder={dict.classes.form.codePlaceholder}
                 required
                 className="font-mono tracking-wide"
                 aria-invalid={Boolean(fieldErrors.code)}
@@ -119,7 +119,7 @@ export function ClassForm({
                 size="icon"
                 onClick={generateCode}
                 loading={isSuggesting}
-                aria-label="Generate a new class code"
+                aria-label={dict.classes.form.generateCode}
                 className="h-11 w-11 shrink-0"
               >
                 {!isSuggesting && <RefreshCw className="h-4 w-4" />}
@@ -129,7 +129,7 @@ export function ClassForm({
 
           <fieldset className="space-y-2">
             <legend className="text-sm font-medium text-ink">
-              Class type
+              {dict.classes.form.type}
               <span className="text-danger" aria-hidden="true">
                 {" "}
                 *
@@ -156,10 +156,10 @@ export function ClassForm({
                   />
                   <span className="min-w-0">
                     <span className="block text-sm font-medium text-ink">
-                      {CLASS_TYPE_LABELS[type]}
+                      {dict.classTypes.labels[type]}
                     </span>
                     <span className="block text-xs text-ink-muted">
-                      {CLASS_TYPE_DESCRIPTIONS[type]}
+                      {dict.classTypes.descriptions[type]}
                     </span>
                   </span>
                 </label>
@@ -169,10 +169,10 @@ export function ClassForm({
 
           <div className="grid gap-5 sm:grid-cols-2">
             <Field
-              label="Maximum students"
+              label={dict.classes.form.maxStudents}
               htmlFor="max_students"
               error={fieldErrors.max_students}
-              hint={capacityLocked ? "Set by the class type" : undefined}
+              hint={capacityLocked ? dict.classes.form.maxStudentsHint : undefined}
               required
             >
               <Input
@@ -190,7 +190,7 @@ export function ClassForm({
             </Field>
 
             <Field
-              label="Lessons per month"
+              label={dict.classes.form.sessionsPerMonth}
               htmlFor="sessions_per_month"
               error={fieldErrors.sessions_per_month}
               required
@@ -209,7 +209,7 @@ export function ClassForm({
           </div>
 
           <div className="grid gap-5 sm:grid-cols-2">
-            <Field label="Teacher" htmlFor="teacher_id" error={fieldErrors.teacher_id}>
+            <Field label={dict.common.teacher} htmlFor="teacher_id" error={fieldErrors.teacher_id}>
               <Select
                 id="teacher_id"
                 name="teacher_id"
@@ -217,7 +217,7 @@ export function ClassForm({
                 disabled={!canReassignTeacher}
                 aria-invalid={Boolean(fieldErrors.teacher_id)}
               >
-                <option value="">Select teacher</option>
+                <option value="">{dict.classes.form.selectTeacher}</option>
                 {teachers.map((teacher) => (
                   <option key={teacher.id} value={teacher.id}>
                     {teacher.full_name}
@@ -226,7 +226,7 @@ export function ClassForm({
               </Select>
             </Field>
 
-            <Field label="Start date" htmlFor="start_date" error={fieldErrors.start_date}>
+            <Field label={dict.classes.form.startDate} htmlFor="start_date" error={fieldErrors.start_date}>
               <Input
                 id="start_date"
                 name="start_date"
@@ -237,21 +237,23 @@ export function ClassForm({
             </Field>
           </div>
 
-          <Field label="Status" htmlFor="status" error={fieldErrors.status} required>
+          <Field label={dict.common.status} htmlFor="status" error={fieldErrors.status} required>
             <Select id="status" name="status" defaultValue={klass?.status ?? "ACTIVE"}>
-              <option value="ACTIVE">Active</option>
-              <option value="INACTIVE">Inactive</option>
-              {isEdit && <option value="ARCHIVED">Archived</option>}
+              <option value="ACTIVE">{dict.classStatus.ACTIVE}</option>
+              <option value="INACTIVE">{dict.classStatus.INACTIVE}</option>
+              {/* Only an existing class can be archived, so the option is
+                  absent on the create form rather than disabled. */}
+              {isEdit && <option value="ARCHIVED">{dict.classStatus.ARCHIVED}</option>}
             </Select>
           </Field>
         </CardContent>
 
         <CardFooter className="justify-end">
           <Button variant="outline" onClick={() => router.back()} disabled={isPending}>
-            Cancel
+            {dict.common.cancel}
           </Button>
           <Button type="submit" loading={isPending}>
-            {isEdit ? "Save changes" : "Create class"}
+            {isEdit ? dict.common.saveChanges : dict.classes.create}
           </Button>
         </CardFooter>
       </Card>

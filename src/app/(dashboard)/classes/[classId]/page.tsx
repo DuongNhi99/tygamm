@@ -2,11 +2,12 @@ import { notFound } from "next/navigation";
 import { CalendarCheck, Percent, Star, Users } from "lucide-react";
 import { getClassById } from "@/services/class.service";
 import { listClassStudents } from "@/services/student.service";
-import { currentPeriod, formatDate, formatPercent, formatPeriod, formatScore, roundTo } from "@/lib/utils";
+import { currentPeriod, formatPercent, formatScore, roundTo } from "@/lib/utils";
+import { getI18n } from "@/lib/i18n/server";
+import { interpolate, plural } from "@/lib/i18n/translate";
 import { StatCard } from "@/components/ui/stat-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ProgressBar } from "@/components/ui/progress-bar";
-import { CLASS_TYPE_DESCRIPTIONS, CLASS_TYPE_LABELS } from "@/types/class";
 
 export default async function ClassOverviewPage({
   params,
@@ -16,9 +17,10 @@ export default async function ClassOverviewPage({
   const { classId } = await params;
   const period = currentPeriod();
 
-  const [klass, students] = await Promise.all([
+  const [klass, students, { dict, fmt }] = await Promise.all([
     getClassById(classId),
     listClassStudents(classId, period),
+    getI18n(),
   ]);
 
   if (!klass) notFound();
@@ -38,26 +40,26 @@ export default async function ClassOverviewPage({
     <div className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
-          label="Students"
+          label={dict.common.students}
           value={`${active.length} / ${klass.max_students}`}
           icon={<Users className="h-5 w-5" />}
         />
         <StatCard
-          label="Lessons this month"
+          label={dict.dashboard.lessonsThisMonth}
           value={`${lessonsRecorded} / ${lessonCapacity}`}
-          hint={formatPeriod(period)}
+          hint={fmt.formatPeriod(period)}
           icon={<CalendarCheck className="h-5 w-5" />}
           tone="success"
         />
         <StatCard
-          label="Average score"
+          label={dict.dashboard.averageScore}
           value={formatScore(mean(scores))}
-          hint="out of 10"
+          hint={dict.common.outOf10}
           icon={<Star className="h-5 w-5" />}
           tone="warning"
         />
         <StatCard
-          label="Attendance"
+          label={dict.common.attendance}
           value={formatPercent(mean(rates), 1)}
           icon={<Percent className="h-5 w-5" />}
         />
@@ -66,44 +68,53 @@ export default async function ClassOverviewPage({
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Monthly progress</CardTitle>
+            <CardTitle>{dict.classes.monthlyProgress}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 pt-2">
             <div className="flex items-baseline justify-between">
               <span className="text-sm text-ink-muted">
-                Lessons recorded across {active.length}{" "}
-                {active.length === 1 ? "student" : "students"}
+                {plural(
+                  {
+                    one: dict.classes.lessonsAcross_one,
+                    other: dict.classes.lessonsAcross_other,
+                  },
+                  active.length,
+                )}
               </span>
               <span className="text-2xl font-semibold text-ink tabular-nums">
                 {Math.round(progress)}%
               </span>
             </div>
-            <ProgressBar value={progress} label="Class monthly progress" />
+            <ProgressBar value={progress} label={dict.classes.classMonthlyProgress} />
             <p className="text-xs text-ink-subtle">
-              {klass.sessions_per_month} lessons per student per month
+              {interpolate(dict.classes.lessonsPerStudentPerMonth, {
+                count: klass.sessions_per_month,
+              })}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Class details</CardTitle>
+            <CardTitle>{dict.classes.details}</CardTitle>
           </CardHeader>
           <CardContent className="pt-2">
             <dl className="divide-y divide-line text-sm">
-              <Row label="Class type">
-                {CLASS_TYPE_LABELS[klass.class_type]}
+              <Row label={dict.classes.classType}>
+                {dict.classTypes.labels[klass.class_type]}
                 <span className="block text-xs text-ink-subtle">
-                  {CLASS_TYPE_DESCRIPTIONS[klass.class_type]}
+                  {dict.classTypes.descriptions[klass.class_type]}
                 </span>
               </Row>
-              <Row label="Class code">
+              <Row label={dict.classes.classCode}>
                 <span className="font-mono tracking-wide">{klass.code}</span>
               </Row>
-              <Row label="Teacher">{klass.teacher_name ?? "Unassigned"}</Row>
-              <Row label="Lessons per month">{klass.sessions_per_month}</Row>
-              <Row label="Start date">{formatDate(klass.start_date)}</Row>
-              <Row label="Created">{formatDate(klass.created_at)}</Row>
+              <Row label={dict.common.teacher}>
+                {klass.teacher_name ?? dict.common.unassigned}
+              </Row>
+              <Row label={dict.classes.lessonsPerMonth}>{klass.sessions_per_month}</Row>
+              <Row label={dict.classes.startDate}>{fmt.formatDate(klass.start_date)}</Row>
+              <Row label={dict.classes.created}>{fmt.formatDate(klass.created_at)}</Row>
             </dl>
           </CardContent>
         </Card>

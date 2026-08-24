@@ -12,6 +12,8 @@ import {
   studentSearchSchema,
 } from "@/lib/validations";
 import { getClassById } from "@/services/class.service";
+import { getDictionary } from "@/lib/i18n/server";
+import { interpolate } from "@/lib/i18n/translate";
 import {
   addStudentToClass,
   findStudentsByContact,
@@ -49,9 +51,10 @@ export async function searchStudentsAction(
   query: string,
 ): Promise<ActionResult<StudentSearchRow[]>> {
   await requireStaff();
+  const dict = await getDictionary();
 
   const parsed = studentSearchSchema.safeParse({ query });
-  if (!parsed.success) return validationError("Enter at least 3 characters");
+  if (!parsed.success) return validationError(dict.validation.minThreeCharacters);
 
   try {
     return actionOk(await findStudentsByContact(parsed.data.query));
@@ -88,13 +91,10 @@ export async function createAndAddStudentAction(
   const auth = await authorizeClass(classId, "add");
   if ("error" in auth) return actionError(auth.error);
 
+  const dict = await getDictionary();
+
   if (!hasServiceRole) {
-    return {
-      ok: false,
-      error:
-        "Creating accounts needs SUPABASE_SERVICE_ROLE_KEY in .env.local. " +
-        "Add it and restart the server, or add an existing student instead.",
-    };
+    return { ok: false, error: dict.errors.serviceRoleMissingClass };
   }
 
   const parsed = createUserSchema.safeParse({
@@ -105,7 +105,7 @@ export async function createAndAddStudentAction(
   });
 
   if (!parsed.success) {
-    return validationError("Please check the form", fieldErrorsFrom(parsed.error));
+    return validationError(dict.validation.checkForm, fieldErrorsFrom(parsed.error, dict));
   }
 
   try {
@@ -145,6 +145,8 @@ export async function saveSessionAction(
   const auth = await authorizeClass(classId, "record");
   if ("error" in auth) return actionError(auth.error);
 
+  const dict = await getDictionary();
+
   const parsed = sessionEntrySchema.safeParse({
     class_id: classId,
     student_id: formData.get("student_id"),
@@ -159,13 +161,15 @@ export async function saveSessionAction(
   });
 
   if (!parsed.success) {
-    return validationError("Please check the form", fieldErrorsFrom(parsed.error));
+    return validationError(dict.validation.checkForm, fieldErrorsFrom(parsed.error, dict));
   }
 
   // The class row is the authority on how many lessons a month has.
   if (parsed.data.session_number > auth.klass.sessions_per_month) {
     return actionError("SESSION_NUMBER_OUT_OF_RANGE", {
-      session_number: `This class has ${auth.klass.sessions_per_month} lessons per month.`,
+      session_number: interpolate(dict.validation.sessionsPerMonth, {
+        count: auth.klass.sessions_per_month,
+      }),
     });
   }
 
@@ -191,9 +195,11 @@ export async function saveMonthAction(
   const auth = await authorizeClass(classId, "record");
   if ("error" in auth) return actionError(auth.error);
 
+  const dict = await getDictionary();
+
   const parsed = bulkSessionSchema.safeParse({ class_id: classId, ...input });
   if (!parsed.success) {
-    return validationError("Please check the scores", fieldErrorsFrom(parsed.error));
+    return validationError(dict.validation.checkScores, fieldErrorsFrom(parsed.error, dict));
   }
 
   const tooHigh = parsed.data.entries.find(

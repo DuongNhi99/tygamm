@@ -1,7 +1,10 @@
+"use client";
+
 import * as React from "react";
 import { cn } from "@/lib/utils";
+import { useDict } from "@/lib/i18n/client";
 import type { Attendance, ClassStatus, UserStatus } from "@/types/database";
-import { ATTENDANCE_LABELS, ATTENDANCE_TONES } from "@/types/lesson";
+import { ATTENDANCE_TONES } from "@/types/lesson";
 
 export type Tone = "neutral" | "brand" | "success" | "warning" | "danger";
 
@@ -37,19 +40,21 @@ const CLASS_STATUS_TONES: Record<ClassStatus, Tone> = {
 };
 
 export function ClassStatusBadge({ status }: { status: ClassStatus }) {
-  const label = status.charAt(0) + status.slice(1).toLowerCase();
-  return <Badge tone={CLASS_STATUS_TONES[status]}>{label}</Badge>;
+  const dict = useDict();
+  return <Badge tone={CLASS_STATUS_TONES[status]}>{dict.classStatus[status]}</Badge>;
 }
 
 export function UserStatusBadge({ status }: { status: UserStatus }) {
+  const dict = useDict();
   return (
     <Badge tone={status === "ACTIVE" ? "success" : "neutral"}>
-      {status === "ACTIVE" ? "Active" : "Inactive"}
+      {status === "ACTIVE" ? dict.common.active : dict.common.inactive}
     </Badge>
   );
 }
 
 export function AttendanceBadge({ attendance }: { attendance: Attendance | null }) {
-  if (!attendance) return <Badge tone="neutral">Not recorded</Badge>;
-  return <Badge tone={ATTENDANCE_TONES[attendance]}>{ATTENDANCE_LABELS[attendance]}</Badge>;
+  const dict = useDict();
+  if (!attendance) return <Badge tone="neutral">{dict.common.notRecorded}</Badge>;
+  return <Badge tone={ATTENDANCE_TONES[attendance]}>{dict.attendance[attendance]}</Badge>;
 }

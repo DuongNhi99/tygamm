@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { Field, Input, Textarea } from "@/components/ui/field";
 import { saveSessionAction } from "@/app/(dashboard)/classes/[classId]/actions";
-import { ATTENDANCE_LABELS } from "@/types/lesson";
+import { useDict } from "@/lib/i18n/client";
+import { interpolate } from "@/lib/i18n/translate";
 import type { Attendance, LessonSessionRow } from "@/types/database";
 import type { Period } from "@/lib/utils";
 
@@ -35,6 +36,7 @@ export function SessionEditorDialog({
   session?: LessonSessionRow;
 }) {
   const router = useRouter();
+  const dict = useDict();
   const [state, formAction, isPending] = useActionState(
     saveSessionAction.bind(null, classId),
     null,
@@ -44,7 +46,7 @@ export function SessionEditorDialog({
     if (!state) return;
 
     if (state.ok) {
-      toast.success("Saved", { icon: <Check className="h-4 w-4" /> });
+      toast.success(dict.classes.sessions.savedShort, { icon: <Check className="h-4 w-4" /> });
       onClose();
       router.refresh();
     } else if (!state.fieldErrors) {
@@ -59,15 +61,15 @@ export function SessionEditorDialog({
     <Dialog
       open={open}
       onClose={onClose}
-      title={`Session ${sessionNumber}`}
+      title={interpolate(dict.classes.sessions.session, { number: sessionNumber })}
       description={studentName}
       footer={
         <>
           <Button variant="outline" onClick={onClose} disabled={isPending}>
-            Cancel
+            {dict.common.cancel}
           </Button>
           <Button type="submit" form="session-form" loading={isPending}>
-            Save
+            {dict.common.save}
           </Button>
         </>
       }
@@ -90,10 +92,10 @@ export function SessionEditorDialog({
 
         <div className="grid gap-4 sm:grid-cols-2">
           <Field
-            label="Score"
+            label={dict.classes.sessions.editorScore}
             htmlFor="score"
             error={fieldErrors.score}
-            hint="0 to 10, decimals allowed. Leave blank if not graded."
+            hint={dict.classes.sessions.editorScoreHint}
           >
             <Input
               id="score"
@@ -109,7 +111,7 @@ export function SessionEditorDialog({
             />
           </Field>
 
-          <Field label="Lesson date" htmlFor="lesson_date" error={fieldErrors.lesson_date}>
+          <Field label={dict.classes.sessions.lessonDate} htmlFor="lesson_date" error={fieldErrors.lesson_date}>
             <Input
               id="lesson_date"
               name="lesson_date"
@@ -120,7 +122,7 @@ export function SessionEditorDialog({
         </div>
 
         <fieldset className="space-y-2">
-          <legend className="text-sm font-medium text-ink">Attendance</legend>
+          <legend className="text-sm font-medium text-ink">{dict.common.attendance}</legend>
           <div className="flex flex-wrap gap-2">
             {ATTENDANCE_OPTIONS.map((option) => (
               <label
@@ -134,29 +136,29 @@ export function SessionEditorDialog({
                   defaultChecked={session?.attendance === option}
                   className="h-4 w-4 accent-[var(--brand)]"
                 />
-                {ATTENDANCE_LABELS[option]}
+                {dict.attendance[option]}
               </label>
             ))}
           </div>
         </fieldset>
 
-        <Field label="Teacher note" htmlFor="teacher_note" error={fieldErrors.teacher_note}>
+        <Field label={dict.classes.sessions.teacherNote} htmlFor="teacher_note" error={fieldErrors.teacher_note}>
           <Textarea
             id="teacher_note"
             name="teacher_note"
             rows={3}
             defaultValue={session?.teacher_note ?? ""}
-            placeholder="Chord transitions much smoother. Keep working on Am → C → G → Em."
+            placeholder={dict.classes.sessions.teacherNotePlaceholder}
           />
         </Field>
 
-        <Field label="Homework" htmlFor="homework" error={fieldErrors.homework}>
+        <Field label={dict.classes.sessions.homework} htmlFor="homework" error={fieldErrors.homework}>
           <Textarea
             id="homework"
             name="homework"
             rows={3}
             defaultValue={session?.homework ?? ""}
-            placeholder="Practice G → C → Em → D, 10 minutes/day, metronome at 70 BPM."
+            placeholder={dict.classes.sessions.homeworkPlaceholder}
           />
         </Field>
       </form>

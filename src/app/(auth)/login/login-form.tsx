@@ -9,11 +9,13 @@ import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
 import { createClient } from "@/lib/supabase/client";
 import { siteUrl } from "@/lib/supabase/env";
+import { useDict } from "@/lib/i18n/client";
 
 export function LoginForm({ redirectTo }: { redirectTo?: string }) {
   const [state, formAction, isPending] = useActionState(signInAction, null);
   const [showPassword, setShowPassword] = useState(false);
   const [oauthPending, setOauthPending] = useState(false);
+  const dict = useDict();
 
   const fieldErrors = state && !state.ok ? (state.fieldErrors ?? {}) : {};
   const formError = state && !state.ok && !state.fieldErrors ? state.error : null;
@@ -35,7 +37,7 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
       });
       if (error) throw error;
     } catch {
-      toast.error("Google sign-in is not enabled for this project yet.");
+      toast.error(dict.auth.googleNotEnabled);
       setOauthPending(false);
     }
   }
@@ -54,19 +56,19 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
           </div>
         )}
 
-        <Field label="Email" htmlFor="email" error={fieldErrors.email} required>
+        <Field label={dict.common.email} htmlFor="email" error={fieldErrors.email} required>
           <Input
             id="email"
             name="email"
             type="email"
             autoComplete="email"
             required
-            placeholder="you@example.com"
+            placeholder={dict.auth.emailPlaceholder}
             aria-invalid={Boolean(fieldErrors.email)}
           />
         </Field>
 
-        <Field label="Password" htmlFor="password" error={fieldErrors.password} required>
+        <Field label={dict.auth.password} htmlFor="password" error={fieldErrors.password} required>
           <div className="relative">
             <Input
               id="password"
@@ -81,7 +83,7 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
             <button
               type="button"
               onClick={() => setShowPassword((value) => !value)}
-              aria-label={showPassword ? "Hide password" : "Show password"}
+              aria-label={showPassword ? dict.auth.hidePassword : dict.auth.showPassword}
               className="absolute top-1/2 right-3 -translate-y-1/2 text-ink-subtle hover:text-ink"
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -90,7 +92,7 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
         </Field>
 
         <Button type="submit" size="lg" loading={isPending} className="w-full">
-          Sign in
+          {dict.common.signIn}
         </Button>
       </form>
 
@@ -99,13 +101,15 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
           href="/forgot-password"
           className="text-sm font-medium text-brand hover:text-brand-hover"
         >
-          Forgot password?
+          {dict.auth.forgotPassword}
         </Link>
       </div>
 
       <div className="flex items-center gap-3" role="separator">
         <span className="h-px flex-1 bg-line" />
-        <span className="text-xs font-medium tracking-wide text-ink-subtle uppercase">or</span>
+        <span className="text-xs font-medium tracking-wide text-ink-subtle uppercase">
+          {dict.auth.or}
+        </span>
         <span className="h-px flex-1 bg-line" />
       </div>
 
@@ -134,7 +138,7 @@ export function LoginForm({ redirectTo }: { redirectTo?: string }) {
             d="M12 4.8c1.8 0 3.3.6 4.6 1.8l3.4-3.4A12 12 0 0 0 1.4 6.7l4 3.1C6.3 6.9 8.9 4.8 12 4.8Z"
           />
         </svg>
-        Continue with Google
+        {dict.auth.continueWithGoogle}
       </Button>
     </div>
   );

@@ -4,20 +4,28 @@ import { listTeacherOptions } from "@/services/teacher.service";
 import { getAppSettings } from "@/services/settings.service";
 import { PageHeader } from "@/components/layout/dashboard-shell";
 import { ClassForm } from "@/components/classes/class-form";
+import { getDictionary } from "@/lib/i18n/server";
 
-export const metadata: Metadata = { title: "Create class" };
+export async function generateMetadata(): Promise<Metadata> {
+  const dict = await getDictionary();
+  return { title: dict.classes.createMeta };
+}
 
 export default async function CreateClassPage() {
   // Admin-only, and the RLS insert policy on `classes` says the same.
   await requireAdmin();
 
-  const [teachers, settings] = await Promise.all([listTeacherOptions(), getAppSettings()]);
+  const [teachers, settings, dict] = await Promise.all([
+    listTeacherOptions(),
+    getAppSettings(),
+    getDictionary(),
+  ]);
 
   return (
     <div className="mx-auto max-w-3xl">
       <PageHeader
-        title="Create new class"
-        description="Set up a class, assign a teacher, and share the code with students."
+        title={dict.classes.createTitle}
+        description={dict.classes.createSubtitle}
       />
 
       <ClassForm

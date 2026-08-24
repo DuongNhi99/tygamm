@@ -4,6 +4,8 @@ import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useQueryParams } from "@/hooks/use-query-params";
 import { cn } from "@/lib/utils";
+import { useDict } from "@/lib/i18n/client";
+import { interpolate, plural } from "@/lib/i18n/translate";
 
 /**
  * Server-side pagination (§41): each control is a link that changes the
@@ -22,6 +24,7 @@ export function Pagination({
   className?: string;
 }) {
   const { buildHref } = useQueryParams();
+  const dict = useDict();
   if (pageCount <= 1) return null;
 
   const pages = pageNumbers(page, pageCount);
@@ -29,14 +32,22 @@ export function Pagination({
   return (
     <nav
       className={cn("flex flex-wrap items-center justify-between gap-3", className)}
-      aria-label="Pagination"
+      aria-label={dict.pagination.label}
     >
       <p className="text-sm text-ink-muted">
-        Page {page} of {pageCount} · {total} {total === 1 ? "result" : "results"}
+        {plural(
+          { one: dict.pagination.summary_one, other: dict.pagination.summary_other },
+          total,
+          { page, pageCount, total },
+        )}
       </p>
 
       <div className="flex items-center gap-1">
-        <PageLink href={buildHref({ page: page - 1 })} disabled={page <= 1} label="Previous page">
+        <PageLink
+          href={buildHref({ page: page - 1 })}
+          disabled={page <= 1}
+          label={dict.pagination.previous}
+        >
           <ChevronLeft className="h-4 w-4" />
         </PageLink>
 
@@ -50,7 +61,7 @@ export function Pagination({
               key={entry}
               href={buildHref({ page: entry })}
               current={entry === page}
-              label={`Page ${entry}`}
+              label={interpolate(dict.pagination.page, { page: entry })}
             >
               {entry}
             </PageLink>
@@ -60,7 +71,7 @@ export function Pagination({
         <PageLink
           href={buildHref({ page: page + 1 })}
           disabled={page >= pageCount}
-          label="Next page"
+          label={dict.pagination.next}
         >
           <ChevronRight className="h-4 w-4" />
         </PageLink>

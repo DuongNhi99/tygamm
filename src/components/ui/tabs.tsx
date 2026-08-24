@@ -9,18 +9,28 @@ export interface TabItem {
   label: string;
 }
 
+
 /**
  * Link-based tabs. Each tab is a real route, so deep links work and each
  * panel stays a Server Component that fetches only its own data.
  */
-export function Tabs({ items, className }: { items: TabItem[]; className?: string }) {
+export function Tabs({
+  items,
+  label,
+  className,
+}: {
+  items: TabItem[];
+  /** Names the tab set for screen readers, in the reader's language. */
+  label: string;
+  className?: string;
+}) {
   const pathname = usePathname();
 
   return (
     <div className={cn("-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0", className)}>
       <nav
         className="flex min-w-max gap-1 border-b border-line"
-        aria-label="Class sections"
+        aria-label={label}
       >
         {items.map((item) => {
           const active = pathname === item.href;

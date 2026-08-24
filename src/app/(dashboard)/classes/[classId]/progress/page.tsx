@@ -2,7 +2,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getClassById } from "@/services/class.service";
 import { getScoreGrid } from "@/services/lesson.service";
-import { currentPeriod, formatPercent, formatPeriod, formatScore, parsePeriodParam, roundTo } from "@/lib/utils";
+import { currentPeriod, formatPercent, formatScore, parsePeriodParam, roundTo } from "@/lib/utils";
+import { getI18n } from "@/lib/i18n/server";
+import { interpolate } from "@/lib/i18n/translate";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
@@ -19,7 +21,7 @@ export default async function ClassProgressPage({
   params: Promise<{ classId: string }>;
   searchParams: Promise<{ period?: string }>;
 }) {
-  const [{ classId }, query] = await Promise.all([params, searchParams]);
+  const [{ classId }, query, { dict, fmt }] = await Promise.all([params, searchParams, getI18n()]);
   const period = parsePeriodParam(query.period) ?? currentPeriod();
 
   const [klass, grid] = await Promise.all([getClassById(classId), getScoreGrid(classId, period)]);
@@ -42,23 +44,25 @@ export default async function ClassProgressPage({
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-lg font-semibold text-ink">Progress · {formatPeriod(period)}</h2>
+        <h2 className="text-lg font-semibold text-ink">
+          {interpolate(dict.classes.progress.title, { period: fmt.formatPeriod(period) })}
+        </h2>
         <PeriodPicker />
       </div>
 
       {grid.rows.length === 0 ? (
         <EmptyState
           icon={<span aria-hidden="true">📈</span>}
-          title="No progress to show"
-          description="Add students and record lessons to see progress here."
+          title={dict.classes.progress.noneTitle}
+          description={dict.classes.progress.noneBody}
         />
       ) : (
         <>
           <Card>
             <CardHeader>
               <div>
-                <CardTitle>Class average by session</CardTitle>
-                <p className="text-sm text-ink-muted">Mean score across all students</p>
+                <CardTitle>{dict.classes.progress.classAverage}</CardTitle>
+                <p className="text-sm text-ink-muted">{dict.classes.progress.classAverageHint}</p>
               </div>
             </CardHeader>
             <CardContent className="pt-2">
@@ -85,7 +89,9 @@ export default async function ClassProgressPage({
                         {row.full_name}
                       </Link>
                       <p className="text-sm text-ink-muted">
-                        Attendance {formatPercent(row.attendance_rate, 1)}
+                        {interpolate(dict.classes.progress.attendanceOf, {
+                          rate: formatPercent(row.attendance_rate, 1),
+                        })}
                       </p>
                     </div>
                     <Badge tone={scoreTone(row.average_score)}>
@@ -95,12 +101,19 @@ export default async function ClassProgressPage({
 
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-ink-subtle">Lessons completed</span>
+                      <span className="text-ink-subtle">
+                        {dict.classes.progress.lessonsCompleted}
+                      </span>
                       <span className="font-medium text-ink tabular-nums">
                         {row.lessons_completed} / {grid.sessions_per_month}
                       </span>
                     </div>
-                    <ProgressBar value={progress} label={`${row.full_name} lessons completed`} />
+                    <ProgressBar
+                      value={progress}
+                      label={interpolate(dict.classes.progress.lessonsCompletedFor, {
+                        name: row.full_name,
+                      })}
+                    />
                   </div>
                 </Card>
               );

@@ -5,6 +5,7 @@ import { getClassById } from "@/services/class.service";
 import { listTeacherOptions } from "@/services/teacher.service";
 import { getAppSettings } from "@/services/settings.service";
 import { ClassForm } from "@/components/classes/class-form";
+import { getDictionary } from "@/lib/i18n/server";
 
 export default async function EditClassPage({
   params,
@@ -20,11 +21,15 @@ export default async function EditClassPage({
   // A teacher may edit their own class, nobody else's.
   if (!canEditClass(user, klass)) redirect(`/classes/${classId}`);
 
-  const [teachers, settings] = await Promise.all([listTeacherOptions(), getAppSettings()]);
+  const [teachers, settings, dict] = await Promise.all([
+    listTeacherOptions(),
+    getAppSettings(),
+    getDictionary(),
+  ]);
 
   return (
     <div className="mx-auto max-w-3xl">
-      <h2 className="mb-6 text-lg font-semibold text-ink">Edit class</h2>
+      <h2 className="mb-6 text-lg font-semibold text-ink">{dict.classes.editTitle}</h2>
       <ClassForm
         klass={klass}
         teachers={teachers}

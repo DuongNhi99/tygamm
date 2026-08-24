@@ -1,22 +1,23 @@
 import Link from "next/link";
 import { Logo } from "@/components/layout/logo";
 import { LinkButton } from "@/components/ui/button";
+import { getDictionary } from "@/lib/i18n/server";
 
-export default function NotFound() {
+export default async function NotFound() {
+  const dict = await getDictionary();
+
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center gap-6 bg-canvas px-4 text-center">
-      <Link href="/dashboard" aria-label="Tygamm home">
+      <Link href="/dashboard" aria-label={dict.app.home}>
         <Logo />
       </Link>
 
       <div className="space-y-2">
-        <h1 className="text-2xl font-semibold tracking-tight text-ink">Page not found</h1>
-        <p className="max-w-sm text-sm text-ink-muted">
-          The page you are looking for does not exist, or you do not have access to it.
-        </p>
+        <h1 className="text-2xl font-semibold tracking-tight text-ink">{dict.notFound.title}</h1>
+        <p className="max-w-sm text-sm text-ink-muted">{dict.notFound.body}</p>
       </div>
 
-      <LinkButton href="/dashboard">Back to dashboard</LinkButton>
+      <LinkButton href="/dashboard">{dict.notFound.action}</LinkButton>
     </div>
   );
 }

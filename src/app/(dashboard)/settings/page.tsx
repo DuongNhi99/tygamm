@@ -7,21 +7,29 @@ import { PageHeader } from "@/components/layout/dashboard-shell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LinkButton } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { LanguagePicker } from "@/components/settings/language-picker";
 import { AppSettingsForm, ProfileSettingsForm } from "@/components/settings/settings-forms";
-import { ROLE_LABELS } from "@/types/auth";
+import { getDictionary } from "@/lib/i18n/server";
+import { interpolate } from "@/lib/i18n/translate";
 
-export const metadata: Metadata = { title: "Settings" };
+export async function generateMetadata(): Promise<Metadata> {
+  const dict = await getDictionary();
+  return { title: dict.settings.meta };
+}
 
 export default async function SettingsPage() {
-  const user = await requireAuth();
+  const [user, dict] = await Promise.all([requireAuth(), getDictionary()]);
   const isAdmin = canManageSettings(user);
   const settings = isAdmin ? await getAppSettings() : null;
 
   return (
     <div className="mx-auto max-w-3xl">
       <PageHeader
-        title="Settings"
-        description={`Signed in as ${user.profile.email ?? user.profile.full_name} · ${ROLE_LABELS[user.profile.role]}`}
+        title={dict.settings.title}
+        description={interpolate(dict.settings.signedInAs, {
+          email: user.profile.email ?? user.profile.full_name,
+          role: dict.roles[user.profile.role],
+        })}
       />
 
       <div className="space-y-6">
@@ -30,10 +38,20 @@ export default async function SettingsPage() {
         <Card>
           <CardHeader>
             <div>
-              <CardTitle>Appearance</CardTitle>
-              <p className="text-sm text-ink-muted">
-                Follow your system setting, or pick light or dark.
-              </p>
+              <CardTitle>{dict.language.title}</CardTitle>
+              <p className="text-sm text-ink-muted">{dict.language.description}</p>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-2">
+            <LanguagePicker />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <div>
+              <CardTitle>{dict.settings.appearance}</CardTitle>
+              <p className="text-sm text-ink-muted">{dict.settings.appearanceHint}</p>
             </div>
           </CardHeader>
           <CardContent className="pt-2">
@@ -44,15 +62,13 @@ export default async function SettingsPage() {
         <Card>
           <CardHeader>
             <div>
-              <CardTitle>Password</CardTitle>
-              <p className="text-sm text-ink-muted">
-                We email you a secure link rather than asking for your current password.
-              </p>
+              <CardTitle>{dict.settings.passwordTitle}</CardTitle>
+              <p className="text-sm text-ink-muted">{dict.settings.passwordHint}</p>
             </div>
           </CardHeader>
           <CardContent className="pt-2">
             <LinkButton href="/forgot-password" variant="outline">
-              Send password reset link
+              {dict.settings.sendResetLink}
             </LinkButton>
           </CardContent>
         </Card>
@@ -62,26 +78,26 @@ export default async function SettingsPage() {
         {isAdmin && (
           <Card>
             <CardHeader>
-              <CardTitle>Management</CardTitle>
+              <CardTitle>{dict.settings.management}</CardTitle>
             </CardHeader>
             <CardContent className="flex flex-wrap gap-2 pt-2">
               <LinkButton href="/teachers" variant="outline">
-                Manage teachers
+                {dict.settings.manageTeachers}
               </LinkButton>
               <LinkButton href="/students" variant="outline">
-                Manage students
+                {dict.settings.manageStudents}
               </LinkButton>
               <LinkButton href="/classes" variant="outline">
-                Manage classes
+                {dict.settings.manageClasses}
               </LinkButton>
             </CardContent>
           </Card>
         )}
 
         <p className="pb-2 text-center text-xs text-ink-subtle">
-          Tygamm ·{" "}
+          {dict.app.name} ·{" "}
           <Link href="/dashboard" className="hover:text-ink">
-            Back to dashboard
+            {dict.settings.backToDashboard}
           </Link>
         </p>
       </div>

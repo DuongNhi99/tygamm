@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { useDict } from "@/lib/i18n/client";
 import { primaryNavForRole } from "./nav-config";
 import type { Role } from "@/types/database";
 
@@ -16,6 +17,7 @@ import type { Role } from "@/types/database";
  */
 export function BottomNav({ role }: { role: Role }) {
   const pathname = usePathname();
+  const dict = useDict();
   const items = primaryNavForRole(role);
 
   return (
@@ -24,7 +26,7 @@ export function BottomNav({ role }: { role: Role }) {
         "fixed inset-x-0 bottom-0 z-30 border-t border-line bg-card/95 backdrop-blur",
         "pb-[env(safe-area-inset-bottom)] lg:hidden",
       )}
-      aria-label="Primary"
+      aria-label={dict.nav.primary}
     >
       <ul className="flex">
         {items.map((item) => {
@@ -42,7 +44,7 @@ export function BottomNav({ role }: { role: Role }) {
                 )}
               >
                 <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />
-                <span className="w-full truncate text-center">{item.label}</span>
+                <span className="w-full truncate text-center">{dict.nav[item.labelKey]}</span>
               </Link>
             </li>
           );

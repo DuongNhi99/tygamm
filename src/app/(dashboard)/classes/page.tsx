@@ -11,18 +11,21 @@ import { LinkButton } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
 import { FilterSelect } from "@/components/ui/filter-select";
 import { Pagination } from "@/components/ui/pagination";
-import { CLASS_STATUS_LABELS, CLASS_TYPE_LABELS } from "@/types/class";
+import { CLASS_STATUSES, CLASS_TYPES } from "@/types/class";
+import { getDictionary } from "@/lib/i18n/server";
 import type { ClassStatus, ClassType } from "@/types/database";
 
-export const metadata: Metadata = { title: "Classes" };
+export async function generateMetadata(): Promise<Metadata> {
+  const dict = await getDictionary();
+  return { title: dict.classes.meta };
+}
 
 export default async function ClassesPage({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const params = await searchParams;
-  const user = await requireAuth();
+  const [params, user, dict] = await Promise.all([searchParams, requireAuth(), getDictionary()]);
 
   const single = (key: string) => {
     const value = params[key];
@@ -52,13 +55,13 @@ export default async function ClassesPage({
   return (
     <>
       <PageHeader
-        title="Classes"
-        description="Every class in the centre, with this month's progress."
+        title={dict.classes.title}
+        description={dict.classes.subtitle}
         actions={
           canCreateClass(user) && (
             <LinkButton href="/classes/create">
               <Plus className="h-4 w-4" />
-              Create class
+              {dict.classes.create}
             </LinkButton>
           )
         }
@@ -66,37 +69,37 @@ export default async function ClassesPage({
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <SearchInput
             paramKey="q"
-            placeholder="Search name or code..."
-            label="Search classes"
+            placeholder={dict.classes.searchPlaceholder}
+            label={dict.classes.searchLabel}
             className="sm:col-span-2 lg:col-span-1"
           />
 
           {isAdmin && (
             <FilterSelect
               paramKey="teacher"
-              label="Filter by teacher"
-              allLabel="All teachers"
+              label={dict.classes.filterTeacher}
+              allLabel={dict.classes.allTeachers}
               options={teachers.map((t) => ({ value: t.id, label: t.full_name }))}
             />
           )}
 
           <FilterSelect
             paramKey="status"
-            label="Filter by status"
-            allLabel="All statuses"
-            options={Object.entries(CLASS_STATUS_LABELS).map(([value, label]) => ({
+            label={dict.classes.filterStatus}
+            allLabel={dict.classes.allStatuses}
+            options={CLASS_STATUSES.map((value) => ({
               value,
-              label,
+              label: dict.classStatus[value],
             }))}
           />
 
           <FilterSelect
             paramKey="type"
-            label="Filter by class type"
-            allLabel="All types"
-            options={Object.entries(CLASS_TYPE_LABELS).map(([value, label]) => ({
+            label={dict.classes.filterType}
+            allLabel={dict.classes.allTypes}
+            options={CLASS_TYPES.map((value) => ({
               value,
-              label,
+              label: dict.classTypes.labels[value],
             }))}
           />
         </div>
@@ -105,15 +108,13 @@ export default async function ClassesPage({
       {result.rows.length === 0 ? (
         <EmptyState
           icon={<span aria-hidden="true">🎸</span>}
-          title={hasFilters ? "No classes match those filters" : "No classes yet"}
+          title={hasFilters ? dict.classes.noMatchTitle : dict.dashboard.noClassesTitle}
           description={
-            hasFilters
-              ? "Try a different search term, or clear the filters."
-              : "Create your first class to start managing your students and lessons."
+            hasFilters ? dict.classes.noMatchBody : dict.dashboard.noClassesBody
           }
           action={
             !hasFilters && canCreateClass(user) ? (
-              <LinkButton href="/classes/create">Create class</LinkButton>
+              <LinkButton href="/classes/create">{dict.classes.create}</LinkButton>
             ) : undefined
           }
         />

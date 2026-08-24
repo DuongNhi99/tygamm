@@ -10,8 +10,4 @@ export interface SessionUser {
   profile: Profile;
 }
 
-export const ROLE_LABELS: Record<Role, string> = {
-  ADMIN: "Admin",
-  TEACHER: "Teacher",
-  STUDENT: "Student",
-};
+/** Role names are translated; see `dict.roles`. */

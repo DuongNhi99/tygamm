@@ -14,6 +14,8 @@ import {
   createAndAddStudentAction,
   searchStudentsAction,
 } from "@/app/(dashboard)/classes/[classId]/actions";
+import { useDict } from "@/lib/i18n/client";
+import { interpolate } from "@/lib/i18n/translate";
 import type { StudentSearchRow } from "@/types/database";
 
 type Mode = "search" | "create";
@@ -32,6 +34,7 @@ export function AddStudentDialog({
   className?: string;
 }) {
   const router = useRouter();
+  const dict = useDict();
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<Mode>("search");
   const [query, setQuery] = useState("");
@@ -48,8 +51,10 @@ export function AddStudentDialog({
     if (!createState) return;
 
     if (createState.ok) {
-      toast.success("Student created and added to the class", {
-        description: `Temporary password: ${createState.data}`,
+      toast.success(dict.classes.addStudent.createdAndAdded, {
+        description: interpolate(dict.createUser.temporaryPassword, {
+          password: createState.data,
+        }),
         duration: 15000,
       });
       reset();
@@ -83,7 +88,7 @@ export function AddStudentDialog({
     startAdding(async () => {
       const result = await addStudentToClassAction(classId, studentId);
       if (result.ok) {
-        toast.success("Student added to class");
+        toast.success(dict.classes.addStudent.added);
         reset();
         router.refresh();
       } else {
@@ -98,26 +103,30 @@ export function AddStudentDialog({
     <>
       <Button size="sm" onClick={() => setOpen(true)} disabled={isFull} className={className}>
         <UserPlus className="h-4 w-4" />
-        Add student
+        {dict.classes.addStudent.button}
       </Button>
 
       <Dialog
         open={open}
         onClose={reset}
-        title={mode === "search" ? "Add student" : "Create student"}
+        title={
+          mode === "search"
+            ? dict.classes.addStudent.searchTitle
+            : dict.classes.addStudent.createTitle
+        }
         description={
           mode === "search"
-            ? "Search by email, phone number or name."
-            : "Create the account and add them to this class."
+            ? dict.classes.addStudent.searchSubtitle
+            : dict.classes.addStudent.createSubtitle
         }
         footer={
           mode === "create" ? (
             <>
               <Button variant="outline" onClick={() => setMode("search")} disabled={isCreating}>
-                Back to search
+                {dict.classes.addStudent.backToSearch}
               </Button>
               <Button type="submit" form="create-student-form" loading={isCreating}>
-                Create student
+                {dict.classes.addStudent.createTitle}
               </Button>
             </>
           ) : undefined
@@ -135,12 +144,12 @@ export function AddStudentDialog({
                     search();
                   }
                 }}
-                placeholder="0901234567 or minh@gmail.com"
-                aria-label="Email, phone number or name"
+                placeholder={dict.classes.addStudent.queryPlaceholder}
+                aria-label={dict.classes.addStudent.queryLabel}
               />
               <Button onClick={search} loading={isSearching} className="shrink-0">
                 {!isSearching && <Search className="h-4 w-4" />}
-                Search
+                {dict.common.search}
               </Button>
             </div>
 
@@ -162,18 +171,18 @@ export function AddStudentDialog({
                         </p>
                       </div>
                       <Button size="sm" onClick={() => add(student.id)} loading={isAdding}>
-                        Add
+                        {dict.common.add}
                       </Button>
                     </li>
                   ))}
                 </ul>
               ) : (
                 <EmptyState
-                  title="Student not found"
-                  description="No student matches that email, phone number or name."
+                  title={dict.classes.addStudent.notFoundTitle}
+                  description={dict.classes.addStudent.notFoundBody}
                   action={
                     <Button variant="outline" onClick={() => setMode("create")}>
-                      Create student
+                      {dict.classes.addStudent.createTitle}
                     </Button>
                   }
                   className="py-8"
@@ -191,15 +200,15 @@ export function AddStudentDialog({
               </div>
             )}
 
-            <Field label="Full name" htmlFor="full_name" error={createErrors.full_name} required>
+            <Field label={dict.common.fullName} htmlFor="full_name" error={createErrors.full_name} required>
               <Input id="full_name" name="full_name" required defaultValue={query.includes("@") ? "" : query} />
             </Field>
 
             <Field
-              label="Email"
+              label={dict.common.email}
               htmlFor="email"
               error={createErrors.email}
-              hint="Used as the student's sign-in address."
+              hint={dict.classes.addStudent.emailHint}
               required
             >
               <Input
@@ -211,7 +220,7 @@ export function AddStudentDialog({
               />
             </Field>
 
-            <Field label="Phone" htmlFor="phone" error={createErrors.phone}>
+            <Field label={dict.common.phone} htmlFor="phone" error={createErrors.phone}>
               <Input
                 id="phone"
                 name="phone"

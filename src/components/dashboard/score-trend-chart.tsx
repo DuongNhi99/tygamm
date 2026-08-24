@@ -11,6 +11,7 @@ import {
   YAxis,
 } from "recharts";
 import { AXIS_TICK, CHART_COLORS, ChartEmpty, ChartTooltip } from "./chart-parts";
+import { useI18n } from "@/lib/i18n/client";
 import type { MonthlyPoint } from "@/services/dashboard.service";
 
 /**
@@ -18,13 +19,19 @@ import type { MonthlyPoint } from "@/services/dashboard.service";
  * 2px line, 8px markers with a surface ring, and a 10% wash beneath.
  */
 export function ScoreTrendChart({ data }: { data: MonthlyPoint[] }) {
+  const { dict, fmt } = useI18n();
+
   const hasData = data.some((point) => point.average !== null);
-  if (!hasData) return <ChartEmpty message="No scores recorded yet." />;
+  if (!hasData) return <ChartEmpty message={dict.charts.noScores} />;
+
+  // The axis is labelled here rather than in the service, so the month names
+  // follow the reader's language without a second round trip.
+  const points = data.map((point) => ({ ...point, label: fmt.shortMonthName(point.month) }));
 
   return (
     <div className="h-64 w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <ComposedChart data={data} margin={{ top: 8, right: 12, bottom: 0, left: -16 }}>
+        <ComposedChart data={points} margin={{ top: 8, right: 12, bottom: 0, left: -16 }}>
           <CartesianGrid stroke={CHART_COLORS.grid} vertical={false} />
           <XAxis
             dataKey="label"

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireAdmin, requireStaff } from "@/lib/auth";
 import { actionError, actionOk, validationError, type ActionResult } from "@/lib/errors";
 import { classSchema, fieldErrorsFrom } from "@/lib/validations";
+import { getDictionary } from "@/lib/i18n/server";
 import { canEditClass } from "@/lib/permissions";
 import {
   archiveClass,
@@ -34,15 +35,16 @@ export async function createClassAction(
   formData: FormData,
 ): Promise<ActionResult<string>> {
   await requireAdmin();
+  const dict = await getDictionary();
 
   const parsed = classSchema.safeParse(formToClassInput(formData));
   if (!parsed.success) {
-    return validationError("Please check the form", fieldErrorsFrom(parsed.error));
+    return validationError(dict.validation.checkForm, fieldErrorsFrom(parsed.error, dict));
   }
 
   try {
     if (await isClassCodeTaken(parsed.data.code)) {
-      return actionError("classes_code_key", { code: "That class code is already in use." });
+      return actionError("classes_code_key", { code: dict.validation.codeTaken });
     }
 
     const created = await createClass(parsed.data);
@@ -64,6 +66,7 @@ export async function updateClassAction(
   formData: FormData,
 ): Promise<ActionResult<string>> {
   const user = await requireStaff();
+  const dict = await getDictionary();
 
   const existing = await getClassById(classId);
   if (!existing) return actionError("CLASS_NOT_FOUND");
@@ -71,17 +74,17 @@ export async function updateClassAction(
 
   const parsed = classSchema.safeParse(formToClassInput(formData));
   if (!parsed.success) {
-    return validationError("Please check the form", fieldErrorsFrom(parsed.error));
+    return validationError(dict.validation.checkForm, fieldErrorsFrom(parsed.error, dict));
   }
 
   // A teacher must not be able to hand their class to someone else.
   if (user.profile.role !== "ADMIN" && parsed.data.teacher_id !== existing.teacher_id) {
-    return actionError("FORBIDDEN", { teacher_id: "Only an admin can reassign a class." });
+    return actionError("FORBIDDEN", { teacher_id: dict.validation.adminOnlyReassign });
   }
 
   try {
     if (await isClassCodeTaken(parsed.data.code, classId)) {
-      return actionError("classes_code_key", { code: "That class code is already in use." });
+      return actionError("classes_code_key", { code: dict.validation.codeTaken });
     }
 
     await updateClass(classId, parsed.data);

@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { cn } from "@/lib/utils";
+import { useDict } from "@/lib/i18n/client";
 
 /**
  * Small menu used for row actions and the user menu. Closes on outside
@@ -12,13 +13,14 @@ export function Dropdown({
   trigger,
   children,
   align = "end",
-  label = "Open menu",
+  label,
 }: {
   trigger: React.ReactNode;
   children: React.ReactNode | ((close: () => void) => React.ReactNode);
   align?: "start" | "end";
   label?: string;
 }) {
+  const dict = useDict();
   const [open, setOpen] = React.useState(false);
   const containerRef = React.useRef<HTMLDivElement>(null);
   const triggerRef = React.useRef<HTMLButtonElement>(null);
@@ -53,7 +55,7 @@ export function Dropdown({
         type="button"
         aria-haspopup="menu"
         aria-expanded={open}
-        aria-label={label}
+        aria-label={label ?? dict.common.openMenu}
         onClick={() => setOpen((value) => !value)}
         className="inline-flex items-center rounded-xl text-ink-muted transition-colors hover:text-ink"
       >

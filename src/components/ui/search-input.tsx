@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from "react";
 import { Search, X } from "lucide-react";
 import { useQueryParams } from "@/hooks/use-query-params";
 import { cn } from "@/lib/utils";
+import { useDict } from "@/lib/i18n/client";
 import { Spinner } from "./button";
 
 /**
@@ -12,7 +13,7 @@ import { Spinner } from "./button";
  */
 export function SearchInput({
   paramKey = "q",
-  placeholder = "Search...",
+  placeholder,
   className,
   label,
 }: {
@@ -22,6 +23,8 @@ export function SearchInput({
   label?: string;
 }) {
   const { searchParams, setParams } = useQueryParams();
+  const dict = useDict();
+  const hint = placeholder ?? dict.search.placeholder;
   const urlValue = searchParams.get(paramKey) ?? "";
   const [value, setValue] = useState(urlValue);
   const [isPending, startTransition] = useTransition();
@@ -55,8 +58,8 @@ export function SearchInput({
         type="search"
         value={value}
         onChange={(event) => setValue(event.target.value)}
-        placeholder={placeholder}
-        aria-label={label ?? placeholder}
+        placeholder={hint}
+        aria-label={label ?? hint}
         className={cn(
           "h-11 w-full rounded-xl border border-line bg-card pr-10 pl-9 text-sm text-ink",
           "placeholder:text-ink-subtle focus:border-brand focus:outline-none",
@@ -69,7 +72,7 @@ export function SearchInput({
           <button
             type="button"
             onClick={() => setValue("")}
-            aria-label="Clear search"
+            aria-label={dict.search.clear}
             className="text-ink-subtle hover:text-ink"
           >
             <X className="h-4 w-4" />

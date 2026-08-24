@@ -6,7 +6,9 @@ import { isAdmin } from "@/lib/permissions";
 import { getClassReport, listStudentOptions } from "@/services/report.service";
 import { listClassOptions } from "@/services/class.service";
 import { listTeacherOptions } from "@/services/teacher.service";
-import { currentPeriod, formatPercent, formatPeriod, formatScore, parsePeriodParam } from "@/lib/utils";
+import { currentPeriod, formatPercent, formatScore, parsePeriodParam } from "@/lib/utils";
+import { getI18n } from "@/lib/i18n/server";
+import { interpolate } from "@/lib/i18n/translate";
 import { PageHeader } from "@/components/layout/dashboard-shell";
 import { StatCard } from "@/components/ui/stat-card";
 import { Badge } from "@/components/ui/badge";
@@ -17,14 +19,21 @@ import { FilterSelect } from "@/components/ui/filter-select";
 import { PeriodPicker } from "@/components/classes/period-picker";
 import { scoreTone } from "@/lib/utils";
 
-export const metadata: Metadata = { title: "Reports" };
+export async function generateMetadata(): Promise<Metadata> {
+  const { dict } = await getI18n();
+  return { title: dict.reports.meta };
+}
 
 export default async function ReportsPage({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const [params, user] = await Promise.all([searchParams, requireStaff()]);
+  const [params, user, { dict, fmt }] = await Promise.all([
+    searchParams,
+    requireStaff(),
+    getI18n(),
+  ]);
 
   const single = (key: string) => {
     const value = params[key];
@@ -48,12 +57,13 @@ export default async function ReportsPage({
   ]);
 
   const rows = report.rows.filter((row) => row.student_count > 0);
+  const periodLabel = fmt.formatPeriod(period);
 
   return (
     <>
       <PageHeader
-        title="Reports"
-        description={`Monthly summary for ${formatPeriod(period)}.`}
+        title={dict.reports.title}
+        description={interpolate(dict.reports.subtitle, { period: periodLabel })}
       >
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <PeriodPicker />
@@ -61,23 +71,23 @@ export default async function ReportsPage({
           {isAdmin(user) && (
             <FilterSelect
               paramKey="teacher"
-              label="Filter by teacher"
-              allLabel="All teachers"
+              label={dict.classes.filterTeacher}
+              allLabel={dict.classes.allTeachers}
               options={teachers.map((t) => ({ value: t.id, label: t.full_name }))}
             />
           )}
 
           <FilterSelect
             paramKey="class"
-            label="Filter by class"
-            allLabel="All classes"
+            label={dict.students.filterClass}
+            allLabel={dict.students.allClasses}
             options={classes.map((c) => ({ value: c.id, label: `${c.name} (${c.code})` }))}
           />
 
           <FilterSelect
             paramKey="student"
-            label="Filter by student"
-            allLabel="All students"
+            label={dict.reports.filterStudent}
+            allLabel={dict.reports.allStudents}
             options={students.map((s) => ({ value: s.id, label: s.full_name }))}
           />
         </div>
@@ -85,27 +95,27 @@ export default async function ReportsPage({
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
-          label="Classes"
+          label={dict.common.classes}
           value={report.totals.classes}
-          hint={`${report.totals.students} students`}
+          hint={interpolate(dict.reports.studentsHint, { count: report.totals.students })}
           icon={<BookOpen className="h-5 w-5" />}
         />
         <StatCard
-          label="Lessons"
+          label={dict.common.lessons}
           value={report.totals.lessons}
-          hint={formatPeriod(period)}
+          hint={periodLabel}
           icon={<CalendarCheck className="h-5 w-5" />}
           tone="success"
         />
         <StatCard
-          label="Average score"
+          label={dict.dashboard.averageScore}
           value={formatScore(report.totals.average_score)}
-          hint="out of 10"
+          hint={dict.common.outOf10}
           icon={<Star className="h-5 w-5" />}
           tone="warning"
         />
         <StatCard
-          label="Attendance"
+          label={dict.common.attendance}
           value={formatPercent(report.totals.attendance_rate, 1)}
           icon={<Percent className="h-5 w-5" />}
         />
@@ -115,8 +125,8 @@ export default async function ReportsPage({
         {rows.length === 0 ? (
           <EmptyState
             icon={<span aria-hidden="true">📊</span>}
-            title="Nothing recorded for this month"
-            description="Once lessons are marked with attendance or a score, they appear in this report."
+            title={dict.reports.noneTitle}
+            description={dict.reports.noneBody}
           />
         ) : (
           <>
@@ -124,12 +134,12 @@ export default async function ReportsPage({
               <Table>
                 <THead>
                   <TR className="hover:bg-transparent">
-                    <TH>Class</TH>
-                    <TH>Teacher</TH>
-                    <TH className="text-center">Students</TH>
-                    <TH className="text-center">Lessons</TH>
-                    <TH>Average</TH>
-                    <TH>Attendance</TH>
+                    <TH>{dict.reports.columnClass}</TH>
+                    <TH>{dict.common.teacher}</TH>
+                    <TH className="text-center">{dict.common.students}</TH>
+                    <TH className="text-center">{dict.common.lessons}</TH>
+                    <TH>{dict.common.average}</TH>
+                    <TH>{dict.common.attendance}</TH>
                   </TR>
                 </THead>
                 <TBody>
@@ -146,7 +156,9 @@ export default async function ReportsPage({
                           {row.class_code}
                         </span>
                       </TD>
-                      <TD className="text-ink-muted">{row.teacher_name ?? "Unassigned"}</TD>
+                      <TD className="text-ink-muted">
+                        {row.teacher_name ?? dict.common.unassigned}
+                      </TD>
                       <TD className="text-center tabular-nums">{row.student_count}</TD>
                       <TD className="text-center tabular-nums">{row.lessons_recorded}</TD>
                       <TD>
@@ -174,21 +186,21 @@ export default async function ReportsPage({
                       </Link>
                       <p className="font-mono text-xs text-ink-subtle">{row.class_code}</p>
                       <p className="text-sm text-ink-muted">
-                        {row.teacher_name ?? "Unassigned"}
+                        {row.teacher_name ?? dict.common.unassigned}
                       </p>
                     </div>
 
                     <dl className="grid grid-cols-2 gap-3 border-t border-line pt-3 text-sm">
                       <div>
-                        <dt className="text-xs text-ink-subtle">Students</dt>
+                        <dt className="text-xs text-ink-subtle">{dict.common.students}</dt>
                         <dd className="mt-0.5 tabular-nums">{row.student_count}</dd>
                       </div>
                       <div>
-                        <dt className="text-xs text-ink-subtle">Lessons</dt>
+                        <dt className="text-xs text-ink-subtle">{dict.common.lessons}</dt>
                         <dd className="mt-0.5 tabular-nums">{row.lessons_recorded}</dd>
                       </div>
                       <div>
-                        <dt className="text-xs text-ink-subtle">Average</dt>
+                        <dt className="text-xs text-ink-subtle">{dict.common.average}</dt>
                         <dd className="mt-0.5">
                           <Badge tone={scoreTone(row.average_score)}>
                             {formatScore(row.average_score)}
@@ -196,7 +208,7 @@ export default async function ReportsPage({
                         </dd>
                       </div>
                       <div>
-                        <dt className="text-xs text-ink-subtle">Attendance</dt>
+                        <dt className="text-xs text-ink-subtle">{dict.common.attendance}</dt>
                         <dd className="mt-0.5 tabular-nums">
                           {formatPercent(row.attendance_rate, 1)}
                         </dd>

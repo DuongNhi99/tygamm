@@ -2,13 +2,10 @@ import type { Attendance, LessonSessionRow } from "./database";
 
 export type { Attendance, LessonSessionRow };
 
-export const ATTENDANCE_LABELS: Record<Attendance, string> = {
-  PRESENT: "Present",
-  ABSENT: "Absent",
-  MAKEUP: "Makeup",
-};
-
-/** Badge colours from §24: present green, absent red, makeup amber. */
+/** Labels live in the dictionary (`dict.attendance`); only the colour
+ *  mapping is locale-independent and stays here.
+ *
+ *  Badge colours from §24: present green, absent red, makeup amber. */
 export const ATTENDANCE_TONES: Record<Attendance, "success" | "danger" | "warning"> = {
   PRESENT: "success",
   ABSENT: "danger",

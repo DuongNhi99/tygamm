@@ -1,4 +1,8 @@
+"use client";
+
 import { formatPercent, roundTo } from "@/lib/utils";
+import { useDict } from "@/lib/i18n/client";
+import { interpolate } from "@/lib/i18n/translate";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { Badge } from "@/components/ui/badge";
 
@@ -20,6 +24,7 @@ export function AttendanceSummary({
   absent: number;
   makeup: number;
 }) {
+  const dict = useDict();
   const recorded = present + absent + makeup;
   // A made-up lesson still happened, so it counts as attended — same rule as
   // recompute_monthly_progress() in migration 005.
@@ -27,31 +32,31 @@ export function AttendanceSummary({
   const rate = recorded > 0 ? roundTo((attended * 100) / recorded, 2) : null;
 
   const rows = [
-    { label: "Present", value: present, tone: "success" as const },
-    { label: "Absent", value: absent, tone: "danger" as const },
-    { label: "Makeup", value: makeup, tone: "warning" as const },
+    { key: "PRESENT", label: dict.attendance.PRESENT, value: present, tone: "success" as const },
+    { key: "ABSENT", label: dict.attendance.ABSENT, value: absent, tone: "danger" as const },
+    { key: "MAKEUP", label: dict.attendance.MAKEUP, value: makeup, tone: "warning" as const },
   ];
 
   return (
     <div className="space-y-5">
       <div className="space-y-2">
         <div className="flex items-baseline justify-between gap-3">
-          <span className="text-sm text-ink-muted">Attendance rate</span>
+          <span className="text-sm text-ink-muted">{dict.attendance.rate}</span>
           <span className="text-2xl font-semibold text-ink tabular-nums">
             {rate === null ? "—" : formatPercent(rate, 1)}
           </span>
         </div>
-        <ProgressBar value={rate ?? 0} label="Attendance rate" />
+        <ProgressBar value={rate ?? 0} label={dict.attendance.rate} />
         <p className="text-xs text-ink-subtle">
           {recorded === 0
-            ? "No attendance recorded this month yet."
-            : `${attended} of ${recorded} lessons attended`}
+            ? dict.attendance.noneThisMonth
+            : interpolate(dict.attendance.attendedOfLessons, { attended, recorded })}
         </p>
       </div>
 
       <dl className="grid grid-cols-3 gap-3">
         {rows.map((row) => (
-          <div key={row.label} className="space-y-1.5">
+          <div key={row.key} className="space-y-1.5">
             <dt>
               <Badge tone={row.tone}>{row.label}</Badge>
             </dt>

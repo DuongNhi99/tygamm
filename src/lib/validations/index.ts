@@ -1,3 +1,4 @@
+import type { Dictionary } from "@/lib/i18n/translate";
 import { z } from "zod";
 
 /* ---------------------------------------------------------------------
@@ -14,25 +15,25 @@ const optionalText = (max = 500) =>
 export const fullNameSchema = z
   .string()
   .trim()
-  .min(2, "Full name must be at least 2 characters")
-  .max(120, "Full name is too long");
+  .min(2, "fullNameMin")
+  .max(120, "fullNameMax");
 
-export const emailSchema = z.email("Enter a valid email address").trim().toLowerCase();
+export const emailSchema = z.email("emailInvalid").trim().toLowerCase();
 
 export const phoneSchema = z.preprocess(
   emptyToNull,
   z
     .string()
     .trim()
-    .regex(/^[0-9+()\-\s]{8,20}$/, "Phone number is invalid")
+    .regex(/^[0-9+()\-\s]{8,20}$/, "phoneInvalid")
     .nullable()
     .default(null),
 );
 
 export const passwordSchema = z
   .string()
-  .min(8, "Password must be at least 8 characters")
-  .max(72, "Password is too long");
+  .min(8, "passwordMin")
+  .max(72, "passwordMax");
 
 /* ---------------------------------------------------------------------
  * Authentication
@@ -40,7 +41,7 @@ export const passwordSchema = z
 
 export const loginSchema = z.object({
   email: emailSchema,
-  password: z.string().min(1, "Password is required"),
+  password: z.string().min(1, "passwordRequired"),
 });
 export type LoginInput = z.infer<typeof loginSchema>;
 
@@ -53,7 +54,7 @@ export const resetPasswordSchema = z
     confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {
-    message: "Passwords do not match",
+    message: "passwordsDoNotMatch",
     path: ["confirmPassword"],
   });
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
@@ -68,7 +69,7 @@ export const profileSchema = z.object({
   phone: phoneSchema,
   avatar_url: z.preprocess(
     emptyToNull,
-    z.url("Enter a valid image URL").nullable().default(null),
+    z.url("avatarUrlInvalid").nullable().default(null),
   ),
 });
 export type ProfileInput = z.infer<typeof profileSchema>;
@@ -96,29 +97,29 @@ export type UpdateUserInput = z.infer<typeof updateUserSchema>;
 
 export const classSchema = z
   .object({
-    name: z.string().trim().min(2, "Class name must be at least 2 characters").max(120),
+    name: z.string().trim().min(2, "classNameMin").max(120),
     code: z
       .string()
       .trim()
       .toUpperCase()
-      .regex(/^[A-Z0-9]{2,4}-[A-Z0-9]{2,4}-[A-Z0-9]{2,6}$/, "Use a code like GT-BG-0826"),
+      .regex(/^[A-Z0-9]{2,4}-[A-Z0-9]{2,4}-[A-Z0-9]{2,6}$/, "classCodeFormat"),
     class_type: z.enum(["ONE_TO_ONE", "ONE_TO_TWO", "GROUP"]),
     max_students: z.coerce
       .number()
-      .int("Maximum students must be a whole number")
-      .min(1, "A class needs at least 1 student")
-      .max(100, "Maximum 100 students per class"),
-    teacher_id: z.preprocess(emptyToNull, z.uuid("Select a teacher").nullable().default(null)),
+      .int("maxStudentsInt")
+      .min(1, "maxStudentsMin")
+      .max(100, "maxStudentsMax"),
+    teacher_id: z.preprocess(emptyToNull, z.uuid("selectTeacher").nullable().default(null)),
     sessions_per_month: z.coerce
       .number()
-      .int("Lessons per month must be a whole number")
-      .min(1, "At least 1 lesson per month")
-      .max(31, "At most 31 lessons per month"),
+      .int("sessionsInt")
+      .min(1, "sessionsMin")
+      .max(31, "sessionsMax"),
     start_date: z.preprocess(
       emptyToNull,
       z
         .string()
-        .regex(/^\d{4}-\d{2}-\d{2}$/, "Enter a valid start date")
+        .regex(/^\d{4}-\d{2}-\d{2}$/, "startDateInvalid")
         .nullable()
         .default(null),
     ),
@@ -145,16 +146,16 @@ export const classIdSchema = z.object({ classId: z.uuid() });
 
 export const addMemberSchema = z.object({
   class_id: z.uuid(),
-  student_id: z.uuid("Select a student"),
+  student_id: z.uuid("selectStudent"),
 });
 export type AddMemberInput = z.infer<typeof addMemberSchema>;
 
 export const studentSearchSchema = z.object({
-  query: z.string().trim().min(3, "Enter at least 3 characters"),
+  query: z.string().trim().min(3, "minThreeCharacters"),
 });
 
 export const joinClassSchema = z.object({
-  code: z.string().trim().min(3, "Enter a class code").toUpperCase(),
+  code: z.string().trim().min(3, "enterValidCode").toUpperCase(),
 });
 
 /* ---------------------------------------------------------------------
@@ -169,9 +170,9 @@ export const scoreSchema = z.preprocess(
     return value;
   },
   z
-    .number("Score must be a number")
-    .min(0, "Score must be between 0 and 10")
-    .max(10, "Score must be between 0 and 10")
+    .number("scoreNumber")
+    .min(0, "scoreRange")
+    .max(10, "scoreRange")
     .nullable(),
 );
 
@@ -185,12 +186,12 @@ export const sessionEntrySchema = z.object({
   student_id: z.uuid(),
   period_year: z.coerce.number().int().min(2000).max(2100),
   period_month: z.coerce.number().int().min(1).max(12),
-  session_number: z.coerce.number().int().min(1, "Session number must be at least 1").max(31),
+  session_number: z.coerce.number().int().min(1, "sessionNumberMin").max(31),
   lesson_date: z.preprocess(
     emptyToNull,
     z
       .string()
-      .regex(/^\d{4}-\d{2}-\d{2}$/, "Enter a valid lesson date")
+      .regex(/^\d{4}-\d{2}-\d{2}$/, "lessonDateInvalid")
       .nullable()
       .default(null),
   ),
@@ -224,12 +225,12 @@ export type BulkSessionInput = z.infer<typeof bulkSessionSchema>;
  * ------------------------------------------------------------------- */
 
 export const appSettingsSchema = z.object({
-  center_name: z.string().trim().min(2, "Centre name is required").max(80),
+  center_name: z.string().trim().min(2, "centreNameRequired").max(80),
   default_sessions_per_month: z.coerce
     .number()
     .int()
-    .min(1, "At least 1 lesson per month")
-    .max(31, "At most 31 lessons per month"),
+    .min(1, "sessionsMin")
+    .max(31, "sessionsMax"),
 });
 export type AppSettingsInput = z.infer<typeof appSettingsSchema>;
 
@@ -239,12 +240,26 @@ export type AppSettingsInput = z.infer<typeof appSettingsSchema>;
 
 export type FieldErrors = Record<string, string>;
 
-/** Flattens a ZodError into `{ fieldName: firstMessage }` for form display. */
-export function fieldErrorsFrom(error: z.ZodError): FieldErrors {
+/**
+ * Flattens a ZodError into `{ fieldName: firstMessage }` for form display.
+ *
+ * The schemas above carry dictionary *keys* rather than sentences, because a
+ * schema is a module-level constant and cannot await a per-request
+ * dictionary. Resolving them here — the one place every validation failure
+ * passes through — keeps the schemas static and still lets a Vietnamese user
+ * read a Vietnamese message.
+ *
+ * A message that is not a known key is passed through unchanged, so an
+ * unmapped Zod built-in still says something rather than rendering a key.
+ */
+export function fieldErrorsFrom(error: z.ZodError, dict: Dictionary): FieldErrors {
+  const messages = dict.validation as Record<string, string | undefined>;
   const result: FieldErrors = {};
+
   for (const issue of error.issues) {
     const key = issue.path.join(".") || "form";
-    if (!result[key]) result[key] = issue.message;
+    if (!result[key]) result[key] = messages[issue.message] ?? issue.message;
   }
+
   return result;
 }

@@ -10,16 +10,20 @@ import { SearchInput } from "@/components/ui/search-input";
 import { FilterSelect } from "@/components/ui/filter-select";
 import { Pagination } from "@/components/ui/pagination";
 import { EmptyState } from "@/components/ui/empty-state";
+import { getDictionary } from "@/lib/i18n/server";
 import type { UserStatus } from "@/types/database";
 
-export const metadata: Metadata = { title: "Students" };
+export async function generateMetadata(): Promise<Metadata> {
+  const dict = await getDictionary();
+  return { title: dict.students.meta };
+}
 
 export default async function StudentsPage({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const [params, user] = await Promise.all([searchParams, requireStaff()]);
+  const [params, user, dict] = await Promise.all([searchParams, requireStaff(), getDictionary()]);
 
   const single = (key: string) => {
     const value = params[key];
@@ -41,36 +45,36 @@ export default async function StudentsPage({
   return (
     <>
       <PageHeader
-        title="Students"
+        title={dict.students.title}
         description={
-          isAdmin(user)
-            ? "Everyone enrolled at the centre."
-            : "Students in the classes you teach."
+          isAdmin(user) ? dict.students.subtitleAdmin : dict.students.subtitleTeacher
         }
-        actions={isAdmin(user) && <CreateUserDialog role="STUDENT" buttonLabel="Add student" />}
+        actions={
+          isAdmin(user) && <CreateUserDialog role="STUDENT" buttonLabel={dict.students.add} />
+        }
       >
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <SearchInput
             paramKey="q"
-            placeholder="Search name, email or phone..."
-            label="Search students"
+            placeholder={dict.students.searchPlaceholder}
+            label={dict.students.searchLabel}
             className="sm:col-span-2"
           />
 
           <FilterSelect
             paramKey="class"
-            label="Filter by class"
-            allLabel="All classes"
+            label={dict.students.filterClass}
+            allLabel={dict.students.allClasses}
             options={classes.map((c) => ({ value: c.id, label: `${c.name} (${c.code})` }))}
           />
 
           <FilterSelect
             paramKey="status"
-            label="Filter by status"
-            allLabel="All statuses"
+            label={dict.classes.filterStatus}
+            allLabel={dict.classes.allStatuses}
             options={[
-              { value: "ACTIVE", label: "Active" },
-              { value: "INACTIVE", label: "Inactive" },
+              { value: "ACTIVE", label: dict.common.active },
+              { value: "INACTIVE", label: dict.common.inactive },
             ]}
           />
         </div>
@@ -79,12 +83,8 @@ export default async function StudentsPage({
       {result.rows.length === 0 ? (
         <EmptyState
           icon={<span aria-hidden="true">👥</span>}
-          title={hasFilters ? "No students match those filters" : "No students yet"}
-          description={
-            hasFilters
-              ? "Try a different search term, or clear the filters."
-              : "Add students from a class page, or create their accounts here."
-          }
+          title={hasFilters ? dict.students.noMatchTitle : dict.students.noneTitle}
+          description={hasFilters ? dict.students.noMatchBody : dict.students.noneBody}
         />
       ) : (
         <>

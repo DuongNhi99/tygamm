@@ -10,7 +10,8 @@ import { LinkButton } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 import { JoinButton } from "./join-button";
-import { CLASS_TYPE_LABELS } from "@/types/class";
+import { getDictionary } from "@/lib/i18n/server";
+import { interpolate } from "@/lib/i18n/translate";
 
 /** Public invite page, so it gets real metadata (§44). */
 export async function generateMetadata({
@@ -18,19 +19,24 @@ export async function generateMetadata({
 }: {
   params: Promise<{ classCode: string }>;
 }): Promise<Metadata> {
-  const { classCode } = await params;
-  if (!isSupabaseConfigured) return { title: "Join a class" };
+  const [{ classCode }, dict] = await Promise.all([params, getDictionary()]);
+  if (!isSupabaseConfigured) return { title: dict.join.meta };
 
   try {
     const klass = await getClassByCode(classCode);
-    if (!klass) return { title: "Class not found" };
+    if (!klass) return { title: dict.join.metaNotFound };
 
     return {
-      title: `Join ${klass.name}`,
-      description: `${klass.name} (${klass.code}) — ${klass.sessions_per_month} lessons per month with ${klass.teacher_name ?? "Tygamm"}.`,
+      title: interpolate(dict.join.metaJoin, { name: klass.name }),
+      description: interpolate(dict.join.metaDescription, {
+        name: klass.name,
+        code: klass.code,
+        count: klass.sessions_per_month,
+        teacher: klass.teacher_name ?? dict.app.name,
+      }),
     };
   } catch {
-    return { title: "Join a class" };
+    return { title: dict.join.meta };
   }
 }
 
@@ -39,12 +45,12 @@ export default async function JoinClassPage({
 }: {
   params: Promise<{ classCode: string }>;
 }) {
-  const { classCode } = await params;
+  const [{ classCode }, dict] = await Promise.all([params, getDictionary()]);
 
   return (
     <div className="flex min-h-dvh flex-col bg-canvas">
       <header className="px-4 py-6 sm:px-8">
-        <Link href="/dashboard" aria-label="Tygamm home">
+        <Link href="/dashboard" aria-label={dict.app.home}>
           <Logo />
         </Link>
       </header>
@@ -59,11 +65,13 @@ export default async function JoinClassPage({
 }
 
 async function JoinContent({ classCode }: { classCode: string }) {
+  const dict = await getDictionary();
+
   if (!isSupabaseConfigured) {
     return (
       <EmptyState
-        title="Not configured yet"
-        description="Add your Supabase credentials to .env.local to enable class invitations."
+        title={dict.join.notConfiguredTitle}
+        description={dict.join.notConfiguredBody}
       />
     );
   }
@@ -74,9 +82,11 @@ async function JoinContent({ classCode }: { classCode: string }) {
     return (
       <EmptyState
         icon={<span aria-hidden="true">🔍</span>}
-        title="Class not found"
-        description={`No class matches the code ${classCode.toUpperCase()}. Check the link and try again.`}
-        action={<LinkButton href="/dashboard">Go to dashboard</LinkButton>}
+        title={dict.join.notFoundTitle}
+        description={interpolate(dict.join.notFoundBody, {
+          code: classCode.toUpperCase(),
+        })}
+        action={<LinkButton href="/dashboard">{dict.join.goToDashboard}</LinkButton>}
       />
     );
   }
@@ -94,7 +104,7 @@ async function JoinContent({ classCode }: { classCode: string }) {
           <h1 className="text-2xl font-semibold tracking-tight text-ink">{klass.name}</h1>
           <p className="font-mono text-sm tracking-wide text-ink-muted">{klass.code}</p>
           <div className="flex justify-center">
-            <Badge tone="brand">{CLASS_TYPE_LABELS[klass.class_type]}</Badge>
+            <Badge tone="brand">{dict.classTypes.labels[klass.class_type]}</Badge>
           </div>
         </div>
 
@@ -102,21 +112,25 @@ async function JoinContent({ classCode }: { classCode: string }) {
           <div className="flex items-center justify-between gap-3">
             <dt className="flex items-center gap-2 text-ink-muted">
               <GraduationCap className="h-4 w-4" aria-hidden="true" />
-              Teacher
+              {dict.common.teacher}
             </dt>
-            <dd className="font-medium text-ink">{klass.teacher_name ?? "To be assigned"}</dd>
+            <dd className="font-medium text-ink">
+              {klass.teacher_name ?? dict.common.toBeAssigned}
+            </dd>
           </div>
           <div className="flex items-center justify-between gap-3">
             <dt className="flex items-center gap-2 text-ink-muted">
               <CalendarCheck className="h-4 w-4" aria-hidden="true" />
-              Lessons
+              {dict.common.lessons}
             </dt>
-            <dd className="font-medium text-ink">{klass.sessions_per_month} per month</dd>
+            <dd className="font-medium text-ink">
+              {interpolate(dict.join.lessonsPerMonth, { count: klass.sessions_per_month })}
+            </dd>
           </div>
           <div className="flex items-center justify-between gap-3">
             <dt className="flex items-center gap-2 text-ink-muted">
               <Users className="h-4 w-4" aria-hidden="true" />
-              Students
+              {dict.common.students}
             </dt>
             <dd className="font-medium text-ink tabular-nums">
               {klass.member_count} / {klass.max_students}
@@ -126,36 +140,35 @@ async function JoinContent({ classCode }: { classCode: string }) {
 
         {!user ? (
           <div className="space-y-3">
-            <p className="text-center text-sm text-ink-muted">
-              Please sign in to join this class.
-            </p>
+            <p className="text-center text-sm text-ink-muted">{dict.join.signInPrompt}</p>
             <LinkButton
               href={`/login?redirectTo=${encodeURIComponent(`/join/${klass.code}`)}`}
               size="lg"
               className="w-full"
             >
-              Sign in
+              {dict.common.signIn}
             </LinkButton>
           </div>
         ) : klass.is_member ? (
           <div className="space-y-3">
-            <p className="text-center text-sm text-success">You are already in this class.</p>
+            <p className="text-center text-sm text-success">{dict.join.alreadyMember}</p>
             <LinkButton href={`/classes/${klass.id}`} size="lg" className="w-full">
-              Go to class
+              {dict.join.goToClass}
             </LinkButton>
           </div>
         ) : user.profile.role !== "STUDENT" ? (
           <p className="rounded-xl border border-warning/30 bg-warning-soft px-4 py-3 text-center text-sm text-warning">
-            Invite links are for student accounts. You are signed in as{" "}
-            {user.profile.role.toLowerCase()}.
+            {interpolate(dict.join.staffAccount, {
+              role: dict.roles[user.profile.role].toLowerCase(),
+            })}
           </p>
         ) : !isActive ? (
           <p className="rounded-xl border border-warning/30 bg-warning-soft px-4 py-3 text-center text-sm text-warning">
-            This class is not accepting new students.
+            {dict.join.notAccepting}
           </p>
         ) : isFull ? (
           <p className="rounded-xl border border-warning/30 bg-warning-soft px-4 py-3 text-center text-sm text-warning">
-            This class is full.
+            {dict.join.full}
           </p>
         ) : (
           <JoinButton code={klass.code} />

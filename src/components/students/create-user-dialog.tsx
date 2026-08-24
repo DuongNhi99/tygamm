@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { Field, Input } from "@/components/ui/field";
 import { createUserAction } from "@/app/(dashboard)/students/actions";
+import { useDict } from "@/lib/i18n/client";
+import { interpolate } from "@/lib/i18n/translate";
 import type { FieldErrors } from "@/lib/validations";
 
 /**
@@ -25,6 +27,7 @@ export function CreateUserDialog({
   buttonLabel: string;
 }) {
   const router = useRouter();
+  const dict = useDict();
   const [open, setOpen] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
@@ -42,10 +45,15 @@ export function CreateUserDialog({
 
       if (result.ok) {
         // Shown once, long enough to write down — it is never stored anywhere.
-        toast.success(`${role === "TEACHER" ? "Teacher" : "Student"} account created`, {
-          description: `Temporary password: ${result.data}`,
-          duration: 20000,
-        });
+        toast.success(
+          role === "TEACHER" ? dict.createUser.teacherCreated : dict.createUser.studentCreated,
+          {
+            description: interpolate(dict.createUser.temporaryPassword, {
+              password: result.data,
+            }),
+            duration: 20000,
+          },
+        );
         close();
         router.refresh();
         return;
@@ -72,14 +80,14 @@ export function CreateUserDialog({
         open={open}
         onClose={close}
         title={buttonLabel}
-        description="The account is created immediately with a temporary password."
+        description={dict.createUser.dialogSubtitle}
         footer={
           <>
             <Button variant="outline" onClick={close} disabled={isPending}>
-              Cancel
+              {dict.common.cancel}
             </Button>
             <Button type="submit" form="create-user-form" loading={isPending}>
-              Create account
+              {dict.createUser.createAccount}
             </Button>
           </>
         }
@@ -94,15 +102,25 @@ export function CreateUserDialog({
             </div>
           )}
 
-          <Field label="Full name" htmlFor="cu_full_name" error={fieldErrors.full_name} required>
-            <Input id="cu_full_name" name="full_name" required placeholder="Nguyen Van A" />
+          <Field
+            label={dict.common.fullName}
+            htmlFor="cu_full_name"
+            error={fieldErrors.full_name}
+            required
+          >
+            <Input
+              id="cu_full_name"
+              name="full_name"
+              required
+              placeholder={dict.createUser.namePlaceholder}
+            />
           </Field>
 
           <Field
-            label="Email"
+            label={dict.common.email}
             htmlFor="cu_email"
             error={fieldErrors.email}
-            hint="Used to sign in."
+            hint={dict.createUser.emailHint}
             required
           >
             <Input
@@ -110,12 +128,17 @@ export function CreateUserDialog({
               name="email"
               type="email"
               required
-              placeholder="teacher@example.com"
+              placeholder={dict.createUser.emailPlaceholder}
             />
           </Field>
 
-          <Field label="Phone" htmlFor="cu_phone" error={fieldErrors.phone}>
-            <Input id="cu_phone" name="phone" type="tel" placeholder="0901234567" />
+          <Field label={dict.common.phone} htmlFor="cu_phone" error={fieldErrors.phone}>
+            <Input
+              id="cu_phone"
+              name="phone"
+              type="tel"
+              placeholder={dict.createUser.phonePlaceholder}
+            />
           </Field>
         </form>
       </Dialog>

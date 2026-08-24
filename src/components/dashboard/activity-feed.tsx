@@ -1,5 +1,8 @@
+"use client";
+
 import { BookOpen, PencilLine, UserPlus } from "lucide-react";
-import { formatRelativeTime } from "@/lib/utils";
+import { useI18n } from "@/lib/i18n/client";
+import { interpolate, type Dictionary } from "@/lib/i18n/translate";
 import type { ActivityItem } from "@/services/dashboard.service";
 
 const ICONS = {
@@ -14,9 +17,38 @@ const TONES = {
   class: "bg-warning-soft text-warning",
 } as const;
 
+/**
+ * Builds one feed line from its parts.
+ *
+ * The service hands over names, not a sentence, because "X joined Y" puts
+ * its pieces in a different order in each of the three locales — only the
+ * dictionary knows where they go.
+ */
+function messageFor(item: ActivityItem, dict: Dictionary): string {
+  const student = item.student ?? dict.dashboard.activityAStudent;
+  const className = item.className ?? dict.dashboard.activityAClass;
+
+  switch (item.kind) {
+    case "score":
+      return interpolate(dict.dashboard.activityScore, { student, class: className });
+    case "join":
+      return interpolate(dict.dashboard.activityJoin, {
+        student: item.student ?? dict.dashboard.activityAStudentCapitalised,
+        class: className,
+      });
+    case "class":
+      return interpolate(dict.dashboard.activityClass, {
+        code: item.classCode ?? "",
+        name: className,
+      });
+  }
+}
+
 export function ActivityFeed({ items }: { items: ActivityItem[] }) {
+  const { dict, fmt } = useI18n();
+
   if (items.length === 0) {
-    return <p className="py-6 text-center text-sm text-ink-muted">No activity yet.</p>;
+    return <p className="py-6 text-center text-sm text-ink-muted">{dict.dashboard.noActivity}</p>;
   }
 
   return (
@@ -32,9 +64,9 @@ export function ActivityFeed({ items }: { items: ActivityItem[] }) {
               <Icon className="h-4 w-4" />
             </span>
             <div className="min-w-0 space-y-0.5">
-              <p className="text-sm text-ink">{item.message}</p>
+              <p className="text-sm text-ink">{messageFor(item, dict)}</p>
               <time dateTime={item.at} className="text-xs text-ink-subtle">
-                {formatRelativeTime(item.at)}
+                {fmt.formatRelativeTime(item.at)}
               </time>
             </div>
           </li>

@@ -14,15 +14,29 @@ export interface DashboardStats {
   averageScore: number | null;
 }
 
+/**
+ * One line of the activity feed.
+ *
+ * The row carries its parts rather than a finished sentence: word order
+ * differs between the three locales, so the sentence is assembled from the
+ * dictionary at render time instead of being baked in here.
+ */
 export interface ActivityItem {
   id: string;
   kind: "score" | "join" | "class";
-  message: string;
+  /** Student name, or null when the profile is no longer visible. */
+  student: string | null;
+  /** Class name, or null when the class is no longer visible. */
+  className: string | null;
+  /** Only set for `kind: "class"`. */
+  classCode?: string;
   at: string;
 }
 
 export interface MonthlyPoint {
-  label: string;
+  /** 1-based, so the chart can label the axis in the reader's language. */
+  month: number;
+  year: number;
   average: number | null;
   lessons: number;
 }
@@ -68,12 +82,11 @@ async function monthlySeries(monthsBack = 6): Promise<MonthlyPoint[]> {
     buckets.set(key, bucket);
   }
 
-  const shortMonths = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
   return periods.map((period) => {
     const bucket = buckets.get(`${period.year}-${period.month}`);
     return {
-      label: shortMonths[period.month - 1],
+      month: period.month,
+      year: period.year,
       average: mean(bucket?.scores ?? []),
       lessons: bucket?.lessons ?? 0,
     };
@@ -177,23 +190,23 @@ async function recentActivity(): Promise<ActivityItem[]> {
     ...sessionRows.map((s) => ({
       id: `score-${s.id}`,
       kind: "score" as const,
-      message: `Score updated for ${names.get(s.student_id) ?? "a student"} in ${
-        classNames.get(s.class_id) ?? "a class"
-      }`,
+      student: names.get(s.student_id) ?? null,
+      className: classNames.get(s.class_id) ?? null,
       at: s.updated_at,
     })),
     ...memberRows.map((m) => ({
       id: `join-${m.id}`,
       kind: "join" as const,
-      message: `${names.get(m.student_id) ?? "A student"} joined ${
-        classNames.get(m.class_id) ?? "a class"
-      }`,
+      student: names.get(m.student_id) ?? null,
+      className: classNames.get(m.class_id) ?? null,
       at: m.joined_at,
     })),
     ...classRows.map((c) => ({
       id: `class-${c.id}`,
       kind: "class" as const,
-      message: `Class ${c.code} (${c.name}) created`,
+      student: null,
+      className: c.name,
+      classCode: c.code,
       at: c.created_at,
     })),
   ];

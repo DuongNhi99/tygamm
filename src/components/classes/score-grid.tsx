@@ -12,7 +12,8 @@ import { Select } from "@/components/ui/field";
 import { SessionEditorDialog } from "./session-editor-dialog";
 import { saveMonthAction } from "@/app/(dashboard)/classes/[classId]/actions";
 import { cn, formatPercent, formatScoreCompact, formatScore, scoreTone, type Period } from "@/lib/utils";
-import { ATTENDANCE_LABELS } from "@/types/lesson";
+import { useDict } from "@/lib/i18n/client";
+import { interpolate } from "@/lib/i18n/translate";
 import type { Attendance } from "@/types/database";
 import type { ScoreGrid as ScoreGridData, ScoreGridRow } from "@/types/lesson";
 
@@ -34,6 +35,7 @@ export function ScoreGrid({
   period: Period;
   canEdit: boolean;
 }) {
+  const dict = useDict();
   const sessionNumbers = useMemo(
     () => Array.from({ length: grid.sessions_per_month }, (_, i) => i + 1),
     [grid.sessions_per_month],
@@ -46,9 +48,7 @@ export function ScoreGrid({
       {/* ---------------------------------------------------------- desktop */}
       <div className="hidden overflow-x-auto rounded-2xl border border-line bg-card shadow-sm md:block">
         <table className="w-full border-collapse text-sm">
-          <caption className="sr-only">
-            Scores for each student and session. Select a cell to record a score.
-          </caption>
+          <caption className="sr-only">{dict.classes.sessions.caption}</caption>
           <thead className="bg-muted/60">
             <tr>
               {/* Sticky so the name stays visible while the sessions scroll. */}
@@ -56,7 +56,7 @@ export function ScoreGrid({
                 scope="col"
                 className="sticky left-0 z-10 bg-muted px-4 py-3 text-left text-xs font-semibold tracking-wide text-ink-muted uppercase"
               >
-                Student
+                {dict.classes.sessions.student}
               </th>
               {sessionNumbers.map((number) => (
                 <th
@@ -71,7 +71,7 @@ export function ScoreGrid({
                 scope="col"
                 className="px-4 py-3 text-right text-xs font-semibold tracking-wide text-ink-muted uppercase"
               >
-                Avg
+                {dict.common.avgShort}
               </th>
             </tr>
           </thead>
@@ -92,9 +92,10 @@ export function ScoreGrid({
                 {sessionNumbers.map((number) => {
                   const session = row.sessions[number];
                   const tone = session?.attendance === "ABSENT" ? "danger" : scoreTone(session?.score);
-                  const label = session?.attendance === "ABSENT"
-                    ? "Abs"
-                    : formatScoreCompact(session?.score);
+                  const label =
+                    session?.attendance === "ABSENT"
+                      ? dict.attendance.absentShort
+                      : formatScoreCompact(session?.score);
 
                   return (
                     <td key={number} className="px-1 py-1.5 text-center">
@@ -102,11 +103,17 @@ export function ScoreGrid({
                         <button
                           type="button"
                           onClick={() => setEditing({ row, sessionNumber: number })}
-                          aria-label={`Session ${number} for ${row.full_name}${
-                            session?.score !== undefined && session?.score !== null
-                              ? `, score ${session.score}`
-                              : ", not graded"
-                          }`}
+                          aria-label={
+                            interpolate(dict.classes.sessions.cellLabel, {
+                              number,
+                              name: row.full_name,
+                            }) +
+                            (session?.score !== undefined && session?.score !== null
+                              ? interpolate(dict.classes.sessions.cellScored, {
+                                  score: session.score,
+                                })
+                              : dict.classes.sessions.cellUngraded)
+                          }
                           className={cn(
                             "min-h-10 w-full min-w-11 rounded-lg px-2 py-1.5 text-sm font-medium tabular-nums transition-colors",
                             "hover:ring-2 hover:ring-brand/40",
@@ -176,6 +183,7 @@ function MobileScoreEntry({
   canEdit: boolean;
 }) {
   const router = useRouter();
+  const dict = useDict();
   const [studentId, setStudentId] = useState(grid.rows[0]?.student_id ?? "");
   const [isPending, startTransition] = useTransition();
 
@@ -221,7 +229,7 @@ function MobileScoreEntry({
       });
 
       if (result.ok) {
-        toast.success("Saved ✓");
+        toast.success(dict.classes.sessions.saved);
         setDraft({});
         router.refresh();
       } else {
@@ -235,7 +243,9 @@ function MobileScoreEntry({
   return (
     <div className="space-y-4">
       <label className="block">
-        <span className="mb-1.5 block text-sm font-medium text-ink">Student</span>
+        <span className="mb-1.5 block text-sm font-medium text-ink">
+          {dict.classes.sessions.student}
+        </span>
         <Select value={studentId} onChange={(event) => setStudentId(event.target.value)}>
           {grid.rows.map((option) => (
             <option key={option.student_id} value={option.student_id}>
@@ -251,7 +261,9 @@ function MobileScoreEntry({
           return (
             <div key={number} className="space-y-3 p-4">
               <div className="flex items-center justify-between gap-3">
-                <span className="text-sm font-medium text-ink">Session {number}</span>
+                <span className="text-sm font-medium text-ink">
+                  {interpolate(dict.classes.sessions.session, { number })}
+                </span>
                 <input
                   type="number"
                   inputMode="decimal"
@@ -262,12 +274,16 @@ function MobileScoreEntry({
                   value={value.score}
                   onChange={(event) => update(number, { score: event.target.value })}
                   placeholder="—"
-                  aria-label={`Score for session ${number}`}
+                  aria-label={interpolate(dict.classes.sessions.scoreForSession, { number })}
                   className="h-11 w-24 rounded-xl border border-line bg-card px-3 text-center text-base font-medium text-ink tabular-nums focus:border-brand focus:outline-none disabled:bg-muted"
                 />
               </div>
 
-              <div className="flex gap-2" role="group" aria-label={`Attendance for session ${number}`}>
+              <div
+                className="flex gap-2"
+                role="group"
+                aria-label={interpolate(dict.classes.sessions.attendanceForSession, { number })}
+              >
                 {ATTENDANCE_OPTIONS.map((option) => {
                   const active = value.attendance === option;
                   return (
@@ -287,7 +303,7 @@ function MobileScoreEntry({
                         !canEdit && "opacity-60",
                       )}
                     >
-                      {ATTENDANCE_LABELS[option]}
+                      {dict.attendance[option]}
                     </button>
                   );
                 })}
@@ -299,13 +315,15 @@ function MobileScoreEntry({
 
       <div className="flex items-center justify-between gap-3 rounded-2xl border border-line bg-card p-4">
         <div>
-          <p className="text-sm text-ink-muted">Average</p>
+          <p className="text-sm text-ink-muted">{dict.common.average}</p>
           <p className="text-xl font-semibold text-ink tabular-nums">
             {formatScore(row.average_score)}
           </p>
         </div>
         <p className="text-sm text-ink-muted">
-          Attendance {formatPercent(row.attendance_rate, 1)}
+          {interpolate(dict.classes.progress.attendanceOf, {
+            rate: formatPercent(row.attendance_rate, 1),
+          })}
         </p>
       </div>
 
@@ -314,7 +332,7 @@ function MobileScoreEntry({
         <div className="sticky bottom-20 z-10">
           <Button size="lg" onClick={save} loading={isPending} disabled={!isDirty} className="w-full shadow-md">
             <Save className="h-4 w-4" />
-            {isDirty ? "Save changes" : "No changes"}
+            {isDirty ? dict.common.saveChanges : dict.classes.sessions.noChanges}
           </Button>
         </div>
       )}

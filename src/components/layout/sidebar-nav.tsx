@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { useDict } from "@/lib/i18n/client";
 import { navGroupsForRole } from "./nav-config";
 import type { Role } from "@/types/database";
 
@@ -21,15 +22,16 @@ export function SidebarNav({
   className?: string;
 }) {
   const pathname = usePathname();
+  const dict = useDict();
   const groups = navGroupsForRole(role);
 
   return (
-    <nav className={cn("space-y-6", className)} aria-label="Main">
+    <nav className={cn("space-y-6", className)} aria-label={dict.nav.main}>
       {groups.map((group, index) => (
-        <div key={group.label ?? `group-${index}`} className="space-y-1">
-          {group.label && (
+        <div key={group.labelKey ?? `group-${index}`} className="space-y-1">
+          {group.labelKey && (
             <p className="px-3 pb-1 text-xs font-semibold tracking-wider text-ink-subtle uppercase">
-              {group.label}
+              {dict.nav[group.labelKey]}
             </p>
           )}
 
@@ -51,7 +53,7 @@ export function SidebarNav({
                 )}
               >
                 <Icon className="h-[18px] w-[18px] shrink-0" aria-hidden="true" />
-                {item.label}
+                {dict.nav[item.labelKey]}
               </Link>
             );
           })}

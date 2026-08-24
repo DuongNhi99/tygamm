@@ -11,6 +11,7 @@ import {
   YAxis,
 } from "recharts";
 import { AXIS_TICK, CHART_COLORS, ChartEmpty, ChartTooltip } from "./chart-parts";
+import { useDict } from "@/lib/i18n/client";
 import type { ClassPerformancePoint } from "@/services/dashboard.service";
 
 /**
@@ -19,7 +20,8 @@ import type { ClassPerformancePoint } from "@/services/dashboard.service";
  * baseline, and the value rides the tip so no gridline is needed for it.
  */
 export function ClassPerformanceChart({ data }: { data: ClassPerformancePoint[] }) {
-  if (data.length === 0) return <ChartEmpty message="No class averages for this month yet." />;
+  const dict = useDict();
+  if (data.length === 0) return <ChartEmpty message={dict.charts.noClassAverages} />;
 
   return (
     <div style={{ height: Math.max(180, data.length * 44 + 32) }} className="w-full">

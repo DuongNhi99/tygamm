@@ -4,24 +4,27 @@ import { Badge, UserStatusBadge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Table, TBody, TD, TH, THead, TR, TableWrapper } from "@/components/ui/table";
 import { formatPercent, formatScore, scoreTone } from "@/lib/utils";
+import { getDictionary } from "@/lib/i18n/server";
 import type { StudentSummary } from "@/types/student";
 
 /** Table on desktop, cards on mobile (§17, §51). Server-rendered — the rows
  *  are links, so nothing here needs to be a Client Component. */
-export function StudentsTable({ students }: { students: StudentSummary[] }) {
+export async function StudentsTable({ students }: { students: StudentSummary[] }) {
+  const dict = await getDictionary();
+
   return (
     <>
       <TableWrapper className="hidden md:block">
         <Table>
           <THead>
             <TR className="hover:bg-transparent">
-              <TH>Name</TH>
-              <TH>Email</TH>
-              <TH>Phone</TH>
-              <TH className="text-center">Classes</TH>
-              <TH>Average</TH>
-              <TH>Attendance</TH>
-              <TH>Status</TH>
+              <TH>{dict.students.name}</TH>
+              <TH>{dict.common.email}</TH>
+              <TH>{dict.common.phone}</TH>
+              <TH className="text-center">{dict.common.classes}</TH>
+              <TH>{dict.common.average}</TH>
+              <TH>{dict.common.attendance}</TH>
+              <TH>{dict.common.status}</TH>
             </TR>
           </THead>
           <TBody>
@@ -77,7 +80,7 @@ export function StudentsTable({ students }: { students: StudentSummary[] }) {
 
               <dl className="grid grid-cols-3 gap-3 border-t border-line pt-3 text-sm">
                 <div>
-                  <dt className="text-xs text-ink-subtle">Average</dt>
+                  <dt className="text-xs text-ink-subtle">{dict.common.average}</dt>
                   <dd className="mt-0.5">
                     <Badge tone={scoreTone(student.average_score)}>
                       {formatScore(student.average_score)}
@@ -85,13 +88,13 @@ export function StudentsTable({ students }: { students: StudentSummary[] }) {
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-xs text-ink-subtle">Attendance</dt>
+                  <dt className="text-xs text-ink-subtle">{dict.common.attendance}</dt>
                   <dd className="mt-0.5 font-medium text-ink tabular-nums">
                     {formatPercent(student.attendance_rate, 1)}
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-xs text-ink-subtle">Classes</dt>
+                  <dt className="text-xs text-ink-subtle">{dict.common.classes}</dt>
                   <dd className="mt-0.5 font-medium text-ink tabular-nums">
                     {student.class_count}
                   </dd>

@@ -11,6 +11,8 @@ import {
   YAxis,
 } from "recharts";
 import { AXIS_TICK, CHART_COLORS, ChartEmpty, ChartTooltip } from "@/components/dashboard/chart-parts";
+import { useDict } from "@/lib/i18n/client";
+import { interpolate } from "@/lib/i18n/translate";
 
 export interface SessionPoint {
   session: number;
@@ -21,15 +23,12 @@ export interface SessionPoint {
  * Score across the sessions of one month — the §23 progress chart. One
  * series, so no legend; the card title says whose scores these are.
  */
-export function SessionTrendChart({
-  data,
-  label = "Score",
-}: {
-  data: SessionPoint[];
-  label?: string;
-}) {
+export function SessionTrendChart({ data, label }: { data: SessionPoint[]; label?: string }) {
+  const dict = useDict();
+  const seriesName = label ?? dict.charts.score;
+
   if (!data.some((point) => point.score !== null)) {
-    return <ChartEmpty message="No scores recorded for this month yet." />;
+    return <ChartEmpty message={dict.charts.noScoresThisMonth} />;
   }
 
   return (
@@ -57,7 +56,7 @@ export function SessionTrendChart({
             content={({ active, label: tooltipLabel, payload }) => (
               <ChartTooltip
                 active={active}
-                label={`Session ${tooltipLabel}`}
+                label={interpolate(dict.charts.session, { number: String(tooltipLabel) })}
                 payload={payload}
                 formatter={(value) => value.toFixed(2)}
                 unit=" / 10"
@@ -76,7 +75,7 @@ export function SessionTrendChart({
           <Line
             type="monotone"
             dataKey="score"
-            name={label}
+            name={seriesName}
             stroke={CHART_COLORS.mark}
             strokeWidth={2}
             strokeLinecap="round"

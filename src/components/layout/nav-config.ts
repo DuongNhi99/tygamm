@@ -1,16 +1,24 @@
 import type { LucideIcon } from "lucide-react";
 import { BarChart3, BookOpen, GraduationCap, LayoutDashboard, Settings, Users } from "lucide-react";
+import type { Dictionary } from "@/lib/i18n/translate";
 import type { Role } from "@/types/database";
+
+/**
+ * Nav entries carry a dictionary key rather than a finished string: this
+ * module is imported by both the sidebar and the bottom bar, and neither can
+ * be handed a per-request dictionary at module scope.
+ */
+type NavKey = keyof Dictionary["nav"];
 
 export interface NavItem {
   href: string;
-  label: string;
+  labelKey: NavKey;
   icon: LucideIcon;
   roles: Role[];
 }
 
 export interface NavGroup {
-  label: string | null;
+  labelKey: NavKey | null;
   items: NavItem[];
 }
 
@@ -21,56 +29,56 @@ export interface NavGroup {
  */
 export const NAV_GROUPS: NavGroup[] = [
   {
-    label: null,
+    labelKey: null,
     items: [
       {
         href: "/dashboard",
-        label: "Dashboard",
+        labelKey: "dashboard",
         icon: LayoutDashboard,
         roles: ["ADMIN", "TEACHER", "STUDENT"],
       },
     ],
   },
   {
-    label: "Teaching",
+    labelKey: "groupTeaching",
     items: [
       {
         href: "/classes",
-        label: "Classes",
+        labelKey: "classes",
         icon: BookOpen,
         roles: ["ADMIN", "TEACHER", "STUDENT"],
       },
       {
         href: "/students",
-        label: "Students",
+        labelKey: "students",
         icon: Users,
         roles: ["ADMIN", "TEACHER"],
       },
     ],
   },
   {
-    label: "Management",
+    labelKey: "groupManagement",
     items: [
       {
         href: "/teachers",
-        label: "Teachers",
+        labelKey: "teachers",
         icon: GraduationCap,
         roles: ["ADMIN"],
       },
       {
         href: "/reports",
-        label: "Reports",
+        labelKey: "reports",
         icon: BarChart3,
         roles: ["ADMIN", "TEACHER"],
       },
     ],
   },
   {
-    label: null,
+    labelKey: null,
     items: [
       {
         href: "/settings",
-        label: "Settings",
+        labelKey: "settings",
         icon: Settings,
         roles: ["ADMIN", "TEACHER", "STUDENT"],
       },

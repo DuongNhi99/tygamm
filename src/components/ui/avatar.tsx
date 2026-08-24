@@ -22,7 +22,9 @@ export function Avatar({
   size?: keyof typeof SIZES;
   className?: string;
 }) {
-  const label = name ?? "Unknown";
+  // With no name there is nothing to announce, so the avatar is left
+  // decorative rather than labelled with an untranslatable placeholder.
+  const label = name?.trim() || null;
 
   return (
     <span
@@ -32,7 +34,7 @@ export function Avatar({
         SIZES[size],
         className,
       )}
-      title={label}
+      title={label ?? undefined}
     >
       {src ? (
         // eslint-disable-next-line @next/next/no-img-element
@@ -40,7 +42,7 @@ export function Avatar({
       ) : (
         <span aria-hidden="true">{initials(label)}</span>
       )}
-      <span className="sr-only">{label}</span>
+      {label && <span className="sr-only">{label}</span>}
     </span>
   );
 }

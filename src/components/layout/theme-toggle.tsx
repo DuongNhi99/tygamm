@@ -3,16 +3,17 @@
 import { useSyncExternalStore } from "react";
 import { Monitor, Moon, Sun } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useDict } from "@/lib/i18n/client";
 
 type Theme = "light" | "dark" | "system";
 
 const STORAGE_KEY = "tygamm-theme";
 const CHANGE_EVENT = "tygamm-theme-change";
 
-const OPTIONS: Array<{ value: Theme; label: string; icon: typeof Sun }> = [
-  { value: "light", label: "Light", icon: Sun },
-  { value: "dark", label: "Dark", icon: Moon },
-  { value: "system", label: "System", icon: Monitor },
+const OPTIONS: Array<{ value: Theme; icon: typeof Sun }> = [
+  { value: "light", icon: Sun },
+  { value: "dark", icon: Moon },
+  { value: "system", icon: Monitor },
 ];
 
 function applyTheme(theme: Theme) {
@@ -62,6 +63,7 @@ function readTheme(): Theme {
  *  the stored choice before first paint; this only changes it. */
 export function ThemeToggle({ className }: { className?: string }) {
   const theme = useSyncExternalStore<Theme>(subscribe, readTheme, () => "system");
+  const dict = useDict();
 
   function choose(next: Theme) {
     try {
@@ -77,11 +79,12 @@ export function ThemeToggle({ className }: { className?: string }) {
     <div
       className={cn("inline-flex rounded-xl border border-line bg-card p-1", className)}
       role="radiogroup"
-      aria-label="Colour theme"
+      aria-label={dict.theme.label}
     >
       {OPTIONS.map((option) => {
         const Icon = option.icon;
         const active = theme === option.value;
+        const label = dict.theme[option.value];
 
         return (
           <button
@@ -90,14 +93,14 @@ export function ThemeToggle({ className }: { className?: string }) {
             role="radio"
             aria-checked={active}
             onClick={() => choose(option.value)}
-            title={option.label}
+            title={label}
             className={cn(
               "inline-flex h-8 w-9 items-center justify-center rounded-lg transition-colors",
               active ? "bg-brand-soft text-brand" : "text-ink-muted hover:text-ink",
             )}
           >
             <Icon className="h-4 w-4" aria-hidden="true" />
-            <span className="sr-only">{option.label}</span>
+            <span className="sr-only">{label}</span>
           </button>
         );
       })}

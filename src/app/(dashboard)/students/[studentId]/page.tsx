@@ -4,15 +4,9 @@ import { ArrowLeft, CalendarCheck, Percent, Star } from "lucide-react";
 import { requireStaff } from "@/lib/auth";
 import { getStudent, listStudentClasses } from "@/services/student.service";
 import { listStudentNotes, listStudentProgress, listStudentSessions } from "@/services/lesson.service";
-import {
-  MONTH_NAMES,
-  currentPeriod,
-  formatPercent,
-  formatPeriod,
-  formatScore,
-  parsePeriodParam,
-  roundTo,
-} from "@/lib/utils";
+import { currentPeriod, formatPercent, formatScore, parsePeriodParam, roundTo } from "@/lib/utils";
+import { getI18n } from "@/lib/i18n/server";
+import { interpolate } from "@/lib/i18n/translate";
 import { PageHeader } from "@/components/layout/dashboard-shell";
 import { StatCard } from "@/components/ui/stat-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,7 +25,11 @@ export default async function StudentDetailPage({
   params: Promise<{ studentId: string }>;
   searchParams: Promise<{ period?: string }>;
 }) {
-  const [{ studentId }, query] = await Promise.all([params, searchParams]);
+  const [{ studentId }, query, { dict, fmt }] = await Promise.all([
+    params,
+    searchParams,
+    getI18n(),
+  ]);
   await requireStaff();
 
   const period = parsePeriodParam(query.period) ?? currentPeriod();
@@ -95,7 +93,7 @@ export default async function StudentDetailPage({
         className="mb-4 inline-flex items-center gap-1.5 text-sm text-ink-muted hover:text-ink"
       >
         <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-        All students
+        {dict.students.allStudents}
       </Link>
 
       <PageHeader
@@ -118,19 +116,22 @@ export default async function StudentDetailPage({
 
       <div className="grid gap-4 sm:grid-cols-3">
         <StatCard
-          label="Average score"
+          label={dict.dashboard.averageScore}
           value={formatScore(averageScore)}
-          hint={`out of 10 · ${formatPeriod(period)}`}
+          hint={interpolate(dict.students.scoreHint, {
+            outOf: dict.common.outOf10,
+            period: fmt.formatPeriod(period),
+          })}
           icon={<Star className="h-5 w-5" />}
         />
         <StatCard
-          label="Attendance"
+          label={dict.common.attendance}
           value={formatPercent(attendanceRate, 1)}
           icon={<Percent className="h-5 w-5" />}
           tone="success"
         />
         <StatCard
-          label="Lessons completed"
+          label={dict.dashboard.lessonsCompleted}
           value={lessonCapacity > 0 ? `${lessonsCompleted} / ${lessonCapacity}` : lessonsCompleted}
           icon={<CalendarCheck className="h-5 w-5" />}
           tone="warning"
@@ -141,14 +142,14 @@ export default async function StudentDetailPage({
         <Card className="lg:col-span-2">
           <CardHeader>
             <div>
-              <CardTitle>Scores this month</CardTitle>
-              <p className="text-sm text-ink-muted">{formatPeriod(period)}</p>
+              <CardTitle>{dict.students.scoresThisMonth}</CardTitle>
+              <p className="text-sm text-ink-muted">{fmt.formatPeriod(period)}</p>
             </div>
           </CardHeader>
           <CardContent className="space-y-6 pt-2">
             {sessionsByClass.length === 0 ? (
               <p className="py-6 text-center text-sm text-ink-muted">
-                This student is not in a class yet.
+                {dict.students.notInClass}
               </p>
             ) : (
               sessionsByClass.map(({ klass, sessions }) => {
@@ -171,11 +172,11 @@ export default async function StudentDetailPage({
 
         <Card>
           <CardHeader>
-            <CardTitle>Monthly comparison</CardTitle>
+            <CardTitle>{dict.students.monthlyComparison}</CardTitle>
           </CardHeader>
           <CardContent className="pt-2">
             {monthly.length === 0 ? (
-              <p className="py-6 text-center text-sm text-ink-muted">No history yet.</p>
+              <p className="py-6 text-center text-sm text-ink-muted">{dict.students.noHistory}</p>
             ) : (
               <ol className="space-y-3">
                 {monthly.map((entry) => {
@@ -185,7 +186,7 @@ export default async function StudentDetailPage({
                     <li key={entry.key} className="space-y-1.5">
                       <div className="flex items-baseline justify-between text-sm">
                         <span className="text-ink-muted">
-                          {MONTH_NAMES[entry.month - 1]} {entry.year}
+                          {fmt.formatPeriod({ year: entry.year, month: entry.month })}
                         </span>
                         <span className="font-medium text-ink tabular-nums">
                           {formatScore(average)}
@@ -194,7 +195,9 @@ export default async function StudentDetailPage({
                       <ProgressBar
                         value={((average ?? 0) / 10) * 100}
                         tone={tone === "neutral" ? "brand" : tone}
-                        label={`${MONTH_NAMES[entry.month - 1]} average`}
+                        label={interpolate(dict.students.monthAverage, {
+                          month: fmt.monthName(entry.month),
+                        })}
                       />
                     </li>
                   );
@@ -208,15 +211,15 @@ export default async function StudentDetailPage({
       <Card className="mt-6">
         <CardHeader>
           <div>
-            <CardTitle>Notes &amp; homework</CardTitle>
-            <p className="text-sm text-ink-muted">Most recent lessons first</p>
+            <CardTitle>{dict.students.notesAndHomework}</CardTitle>
+            <p className="text-sm text-ink-muted">{dict.students.notesHint}</p>
           </div>
         </CardHeader>
         <CardContent className="pt-2">
           {notes.length === 0 ? (
             <EmptyState
-              title="No notes yet"
-              description="Teacher notes and homework appear here once they are recorded on a lesson."
+              title={dict.students.noNotesTitle}
+              description={dict.students.noNotesBody}
               className="border-0 bg-transparent py-8"
             />
           ) : (
@@ -225,8 +228,11 @@ export default async function StudentDetailPage({
                 <li key={note.id} className="space-y-2 py-4 first:pt-0 last:pb-0">
                   <div className="flex flex-wrap items-center gap-2 text-sm">
                     <span className="font-medium text-ink">
-                      {MONTH_NAMES[note.period_month - 1]} {note.period_year} · Session{" "}
-                      {note.session_number}
+                      {interpolate(dict.students.noteHeading, {
+                        month: fmt.monthName(note.period_month),
+                        year: note.period_year,
+                        number: note.session_number,
+                      })}
                     </span>
                     <AttendanceBadge attendance={note.attendance} />
                     {note.score !== null && (
@@ -242,7 +248,7 @@ export default async function StudentDetailPage({
                   {note.homework && (
                     <div className="rounded-xl bg-muted px-3 py-2">
                       <p className="text-xs font-medium tracking-wide text-ink-subtle uppercase">
-                        Homework
+                        {dict.students.homework}
                       </p>
                       <p className="mt-0.5 text-sm whitespace-pre-line text-ink">{note.homework}</p>
                     </div>

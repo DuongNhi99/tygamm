@@ -4,6 +4,7 @@ import { SidebarNav } from "./sidebar-nav";
 import { BottomNav } from "./mobile-nav";
 import { UserMenu } from "./user-menu";
 import { ThemeToggle } from "./theme-toggle";
+import { getDictionary } from "@/lib/i18n/server";
 import type { SessionUser } from "@/types/auth";
 
 /**
@@ -13,13 +14,14 @@ import type { SessionUser } from "@/types/auth";
  * A Server Component — only the interactive pieces inside it are client
  * components, so the dashboard is not wholesale client-rendered (§43).
  */
-export function DashboardShell({
+export async function DashboardShell({
   user,
   children,
 }: {
   user: SessionUser;
   children: React.ReactNode;
 }) {
+  const dict = await getDictionary();
   const role = user.profile.role;
 
   return (
@@ -28,13 +30,13 @@ export function DashboardShell({
         href="#main-content"
         className="sr-only rounded-lg bg-brand px-4 py-2 text-brand-ink focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-50"
       >
-        Skip to content
+        {dict.common.skipToContent}
       </a>
 
       {/* Desktop sidebar */}
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-line bg-card lg:flex">
         <div className="shrink-0 px-5 py-5">
-          <Link href="/dashboard" aria-label="Tygamm dashboard">
+          <Link href="/dashboard" aria-label={dict.app.dashboardHome}>
             <Logo />
           </Link>
         </div>
@@ -50,7 +52,7 @@ export function DashboardShell({
 
       <div className="lg:pl-64">
         <header className="sticky top-0 z-20 flex h-16 items-center gap-2 border-b border-line bg-card/90 px-4 backdrop-blur sm:px-6">
-          <Link href="/dashboard" className="lg:hidden" aria-label="Tygamm dashboard">
+          <Link href="/dashboard" className="lg:hidden" aria-label={dict.app.dashboardHome}>
             <Logo showText={false} />
           </Link>
 

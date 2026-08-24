@@ -86,7 +86,12 @@
 
   --color-ring: var(--ring);
 
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  /* Inter carries Latin and Vietnamese but no CJK, so the Simplified Chinese
+     UI falls through to a named system face rather than whatever the browser
+     picks — the metrics stay close enough that layout does not shift. */
+  --font-sans:
+    var(--font-inter), ui-sans-serif, system-ui, "PingFang SC", "Hiragino Sans GB",
+    "Microsoft YaHei", "Noto Sans SC", sans-serif;
 }
 
 @layer base {

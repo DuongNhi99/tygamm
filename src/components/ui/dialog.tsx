@@ -3,6 +3,7 @@
 import * as React from "react";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useDict } from "@/lib/i18n/client";
 import { Button } from "./button";
 
 /**
@@ -27,6 +28,7 @@ export function Dialog({
   footer?: React.ReactNode;
   size?: "sm" | "md" | "lg";
 }) {
+  const dict = useDict();
   const ref = React.useRef<HTMLDialogElement>(null);
   const titleId = React.useId();
   const descriptionId = React.useId();
@@ -78,7 +80,7 @@ export function Dialog({
             </p>
           )}
         </div>
-        <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close dialog">
+        <Button variant="ghost" size="icon" onClick={onClose} aria-label={dict.common.close}>
           <X className="h-4 w-4" />
         </Button>
       </div>
@@ -104,8 +106,8 @@ export function ConfirmDialog({
   onConfirm,
   title,
   description,
-  confirmLabel = "Confirm",
-  cancelLabel = "Cancel",
+  confirmLabel,
+  cancelLabel,
   destructive = true,
   loading = false,
 }: {
@@ -119,6 +121,8 @@ export function ConfirmDialog({
   destructive?: boolean;
   loading?: boolean;
 }) {
+  const dict = useDict();
+
   return (
     <Dialog
       open={open}
@@ -129,7 +133,7 @@ export function ConfirmDialog({
       footer={
         <>
           <Button variant="outline" onClick={onClose} disabled={loading} className="sm:w-auto">
-            {cancelLabel}
+            {cancelLabel ?? dict.common.cancel}
           </Button>
           <Button
             variant={destructive ? "danger" : "primary"}
@@ -137,7 +141,7 @@ export function ConfirmDialog({
             loading={loading}
             className="sm:w-auto"
           >
-            {confirmLabel}
+            {confirmLabel ?? dict.common.confirm}
           </Button>
         </>
       }

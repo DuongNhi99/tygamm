@@ -10,7 +10,8 @@ import { LinkButton } from "@/components/ui/button";
 import { CopyCodeButton } from "@/components/classes/copy-code-button";
 import { AddStudentDialog } from "@/components/classes/add-student-dialog";
 import { ArchiveClassButton } from "@/components/classes/archive-class-button";
-import { CLASS_TYPE_LABELS } from "@/types/class";
+import { getDictionary } from "@/lib/i18n/server";
+import { interpolate } from "@/lib/i18n/translate";
 
 /**
  * Shared chrome for the class tabs. The class is fetched here and again in
@@ -23,8 +24,7 @@ export default async function ClassLayout({
   children: React.ReactNode;
   params: Promise<{ classId: string }>;
 }) {
-  const { classId } = await params;
-  const user = await requireAuth();
+  const [{ classId }, user, dict] = await Promise.all([params, requireAuth(), getDictionary()]);
 
   // RLS returns nothing for a class this user may not see, so "not permitted"
   // and "does not exist" are the same 404 — no existence leak either way.
@@ -41,7 +41,7 @@ export default async function ClassLayout({
         className="mb-4 inline-flex items-center gap-1.5 text-sm text-ink-muted hover:text-ink"
       >
         <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-        All classes
+        {dict.classes.allClasses}
       </Link>
 
       <div className="mb-6 space-y-4">
@@ -52,7 +52,7 @@ export default async function ClassLayout({
                 {klass.name}
               </h1>
               <ClassStatusBadge status={klass.status} />
-              <Badge tone="brand">{CLASS_TYPE_LABELS[klass.class_type]}</Badge>
+              <Badge tone="brand">{dict.classTypes.labels[klass.class_type]}</Badge>
             </div>
 
             <p className="font-mono text-sm tracking-wide text-ink-muted">{klass.code}</p>
@@ -60,14 +60,17 @@ export default async function ClassLayout({
             <dl className="flex flex-wrap items-center gap-x-5 gap-y-1 text-sm text-ink-muted">
               <div className="flex items-center gap-1.5">
                 <GraduationCap className="h-4 w-4" aria-hidden="true" />
-                <dt className="sr-only">Teacher</dt>
-                <dd>{klass.teacher_name ?? "Unassigned"}</dd>
+                <dt className="sr-only">{dict.common.teacher}</dt>
+                <dd>{klass.teacher_name ?? dict.common.unassigned}</dd>
               </div>
               <div className="flex items-center gap-1.5">
                 <Users className="h-4 w-4" aria-hidden="true" />
-                <dt className="sr-only">Students</dt>
+                <dt className="sr-only">{dict.common.students}</dt>
                 <dd>
-                  {klass.student_count} of {klass.max_students} students
+                  {interpolate(dict.classes.studentsOfCapacity, {
+                    count: klass.student_count,
+                    max: klass.max_students,
+                  })}
                 </dd>
               </div>
             </dl>
@@ -82,7 +85,7 @@ export default async function ClassLayout({
             {canEditClass(user, klass) && (
               <LinkButton href={`${base}/edit`} variant="outline" size="sm">
                 <Pencil className="h-4 w-4" />
-                Edit
+                {dict.common.edit}
               </LinkButton>
             )}
             {canArchiveClass(user) && klass.status !== "ARCHIVED" && (
@@ -92,11 +95,12 @@ export default async function ClassLayout({
         </div>
 
         <Tabs
+          label={dict.classes.sections}
           items={[
-            { href: base, label: "Overview" },
-            { href: `${base}/students`, label: "Students" },
-            { href: `${base}/sessions`, label: "Sessions" },
-            { href: `${base}/progress`, label: "Progress" },
+            { href: base, label: dict.classes.overview },
+            { href: `${base}/students`, label: dict.classes.tabStudents },
+            { href: `${base}/sessions`, label: dict.classes.tabSessions },
+            { href: `${base}/progress`, label: dict.classes.tabProgress },
           ]}
         />
       </div>

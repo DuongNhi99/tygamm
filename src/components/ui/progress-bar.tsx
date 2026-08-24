@@ -16,7 +16,8 @@ export function ProgressBar({
   /** 0-100. Values outside the range are clamped. */
   value: number;
   tone?: keyof typeof TONES;
-  label?: string;
+  /** Announced to screen readers; always supply one, in the reader's language. */
+  label: string;
   className?: string;
 }) {
   const clamped = Math.max(0, Math.min(100, Math.round(value)));
@@ -28,7 +29,7 @@ export function ProgressBar({
       aria-valuenow={clamped}
       aria-valuemin={0}
       aria-valuemax={100}
-      aria-label={label ?? "Progress"}
+      aria-label={label}
     >
       <div
         className={cn("h-full rounded-full transition-[width] duration-500", TONES[tone])}

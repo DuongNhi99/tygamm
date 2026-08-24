@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requireAuth } from "@/lib/auth";
 import { actionError, actionOk, validationError, type ActionResult } from "@/lib/errors";
 import { joinClassSchema } from "@/lib/validations";
+import { getDictionary } from "@/lib/i18n/server";
 
 /**
  * Joining goes through the `join_class` RPC, not a direct insert.
@@ -16,9 +17,10 @@ import { joinClassSchema } from "@/lib/validations";
  */
 export async function joinClassAction(code: string): Promise<ActionResult<string>> {
   await requireAuth();
+  const dict = await getDictionary();
 
   const parsed = joinClassSchema.safeParse({ code });
-  if (!parsed.success) return validationError("Enter a valid class code");
+  if (!parsed.success) return validationError(dict.validation.enterValidCode);
 
   try {
     const supabase = await createClient();

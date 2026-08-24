@@ -47,3 +47,17 @@ export async function updateOwnProfile(userId: string, input: ProfileInput): Pro
 
   if (error) throw error;
 }
+
+/**
+ * Remembers the account's interface language (migration 009).
+ *
+ * Separate from `updateOwnProfile` because it is written by the language
+ * picker rather than the profile form — folding it in would mean the profile
+ * form had to round-trip a value it never shows.
+ */
+export async function updateOwnLocale(userId: string, locale: string): Promise<void> {
+  const supabase = await createClient();
+  const { error } = await supabase.from("profiles").update({ locale }).eq("id", userId);
+
+  if (error) throw error;
+}

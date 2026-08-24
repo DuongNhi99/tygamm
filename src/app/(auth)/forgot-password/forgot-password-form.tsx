@@ -5,9 +5,11 @@ import { CheckCircle2 } from "lucide-react";
 import { requestPasswordResetAction } from "../actions";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
+import { useDict } from "@/lib/i18n/client";
 
 export function ForgotPasswordForm() {
   const [state, formAction, isPending] = useActionState(requestPasswordResetAction, null);
+  const dict = useDict();
 
   if (state?.ok) {
     return (
@@ -35,20 +37,20 @@ export function ForgotPasswordForm() {
         </div>
       )}
 
-      <Field label="Email" htmlFor="email" error={fieldErrors.email} required>
+      <Field label={dict.common.email} htmlFor="email" error={fieldErrors.email} required>
         <Input
           id="email"
           name="email"
           type="email"
           autoComplete="email"
           required
-          placeholder="you@example.com"
+          placeholder={dict.auth.emailPlaceholder}
           aria-invalid={Boolean(fieldErrors.email)}
         />
       </Field>
 
       <Button type="submit" size="lg" loading={isPending} className="w-full">
-        Send reset link
+        {dict.auth.sendResetLink}
       </Button>
     </form>
   );

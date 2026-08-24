@@ -19,6 +19,8 @@ export type ProfileRow = {
   avatar_url: string | null;
   role: Role;
   status: UserStatus;
+  /** Preferred interface language; null until the user picks one (009). */
+  locale: string | null;
   created_at: string;
   updated_at: string;
 }

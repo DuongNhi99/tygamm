@@ -55,20 +55,19 @@ export function scoreTone(score: number | null | undefined): "success" | "warnin
  * Dates and periods
  * ------------------------------------------------------------------- */
 
-export const MONTH_NAMES = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
-] as const;
+/**
+ * Month names, date formatting, relative times and the greeting all depend
+ * on the reader's language, so they live in `lib/i18n/translate` behind
+ * `createFormatters(locale, dict)` rather than here. What stays in this file
+ * is what reads the same in every locale: digits, percentages and period
+ * arithmetic.
+ */
 
 export type Period = { year: number; month: number };
 
 export function currentPeriod(): Period {
   const now = new Date();
   return { year: now.getFullYear(), month: now.getMonth() + 1 };
-}
-
-export function formatPeriod({ year, month }: Period): string {
-  return `${MONTH_NAMES[month - 1] ?? "?"} ${year}`;
 }
 
 /** `2026-08` — the value used in URL query strings and <select> options. */
@@ -94,46 +93,6 @@ export function shiftPeriod({ year, month }: Period, delta: number): Period {
 /** Most recent `count` periods, newest first — powers the month pickers. */
 export function recentPeriods(count: number, from: Period = currentPeriod()): Period[] {
   return Array.from({ length: count }, (_, i) => shiftPeriod(from, -i));
-}
-
-export function formatDate(value: string | Date | null | undefined): string {
-  if (!value) return "—";
-  const date = typeof value === "string" ? new Date(value) : value;
-  if (Number.isNaN(date.getTime())) return "—";
-  return date.toLocaleDateString("en-GB", { day: "2-digit", month: "2-digit", year: "numeric" });
-}
-
-/** Coarse "3 hours ago" phrasing for the activity feed. */
-export function formatRelativeTime(value: string | Date | null | undefined): string {
-  if (!value) return "";
-  const date = typeof value === "string" ? new Date(value) : value;
-  if (Number.isNaN(date.getTime())) return "";
-
-  const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
-  if (seconds < 60) return "just now";
-
-  const units: Array<[Intl.RelativeTimeFormatUnit, number]> = [
-    ["minute", 60],
-    ["hour", 3600],
-    ["day", 86400],
-    ["month", 2592000],
-    ["year", 31536000],
-  ];
-
-  let chosen: [Intl.RelativeTimeFormatUnit, number] = units[0];
-  for (const unit of units) {
-    if (seconds >= unit[1]) chosen = unit;
-  }
-
-  const formatter = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
-  return formatter.format(-Math.floor(seconds / chosen[1]), chosen[0]);
-}
-
-export function greetingForNow(date = new Date()): string {
-  const hour = date.getHours();
-  if (hour < 12) return "Good morning";
-  if (hour < 18) return "Good afternoon";
-  return "Good evening";
 }
 
 /* ---------------------------------------------------------------------

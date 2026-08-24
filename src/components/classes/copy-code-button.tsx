@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Check, Copy, Link2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { useDict } from "@/lib/i18n/client";
 
 /** Copies the class code, or the full invite URL for `/join/[classCode]`. */
 export function CopyCodeButton({
@@ -16,6 +17,7 @@ export function CopyCodeButton({
   className?: string;
 }) {
   const [copied, setCopied] = useState(false);
+  const dict = useDict();
 
   async function copy() {
     const value = mode === "invite" ? `${window.location.origin}/join/${code}` : code;
@@ -23,10 +25,10 @@ export function CopyCodeButton({
     try {
       await navigator.clipboard.writeText(value);
       setCopied(true);
-      toast.success(mode === "invite" ? "Invite link copied" : "Class code copied");
+      toast.success(mode === "invite" ? dict.classes.inviteCopied : dict.classes.codeCopied);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      toast.error("Could not copy to the clipboard.");
+      toast.error(dict.classes.copyFailed);
     }
   }
 
@@ -35,7 +37,7 @@ export function CopyCodeButton({
   return (
     <Button variant="outline" size="sm" onClick={copy} className={className}>
       <Icon className="h-4 w-4" />
-      {mode === "invite" ? "Copy invite" : "Copy code"}
+      {mode === "invite" ? dict.classes.copyInvite : dict.classes.copyCode}
     </Button>
   );
 }

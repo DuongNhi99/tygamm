@@ -2,23 +2,15 @@ import type { ClassRow, ClassStatus, ClassType, MemberStatus } from "./database"
 
 export type { ClassRow, ClassStatus, ClassType, MemberStatus };
 
-export const CLASS_TYPE_LABELS: Record<ClassType, string> = {
-  ONE_TO_ONE: "1-1",
-  ONE_TO_TWO: "2-1",
-  GROUP: "Group",
-};
+/** The three class shapes, in the order the create form offers them.
+ *
+ *  Their labels and descriptions live in the dictionary
+ *  (`dict.classTypes`, `dict.classStatus`) so they can be translated; this
+ *  file keeps only what does not change with language.
+ */
+export const CLASS_TYPES: ClassType[] = ["ONE_TO_ONE", "ONE_TO_TWO", "GROUP"];
 
-export const CLASS_TYPE_DESCRIPTIONS: Record<ClassType, string> = {
-  ONE_TO_ONE: "One teacher, one student",
-  ONE_TO_TWO: "One teacher, two students",
-  GROUP: "One teacher, many students",
-};
-
-export const CLASS_STATUS_LABELS: Record<ClassStatus, string> = {
-  ACTIVE: "Active",
-  INACTIVE: "Inactive",
-  ARCHIVED: "Archived",
-};
+export const CLASS_STATUSES: ClassStatus[] = ["ACTIVE", "INACTIVE", "ARCHIVED"];
 
 /** Capacity is implied by type for the fixed shapes; only GROUP is free. */
 export function capacityForType(type: ClassType, requested: number): number {

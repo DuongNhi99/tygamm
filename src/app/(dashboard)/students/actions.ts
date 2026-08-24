@@ -5,6 +5,7 @@ import { requireAdmin, requireStaff } from "@/lib/auth";
 import { actionError, actionOk, validationError, type ActionResult } from "@/lib/errors";
 import { createUserSchema, fieldErrorsFrom, updateUserSchema } from "@/lib/validations";
 import { createUserAccount, hasServiceRole, updateUserProfile } from "@/services/teacher.service";
+import { getDictionary } from "@/lib/i18n/server";
 
 /**
  * Creates a person (teacher or student).
@@ -19,14 +20,10 @@ export async function createUserAction(
   formData: FormData,
 ): Promise<ActionResult<string>> {
   await requireAdmin();
+  const dict = await getDictionary();
 
   if (!hasServiceRole) {
-    return {
-      ok: false,
-      error:
-        "Creating accounts needs SUPABASE_SERVICE_ROLE_KEY in .env.local (server-side only). " +
-        "Add it and restart the dev server.",
-    };
+    return { ok: false, error: dict.errors.serviceRoleMissing };
   }
 
   const parsed = createUserSchema.safeParse({
@@ -37,7 +34,7 @@ export async function createUserAction(
   });
 
   if (!parsed.success) {
-    return validationError("Please check the form", fieldErrorsFrom(parsed.error));
+    return validationError(dict.validation.checkForm, fieldErrorsFrom(parsed.error, dict));
   }
 
   try {
@@ -56,6 +53,7 @@ export async function updateUserAction(
   formData: FormData,
 ): Promise<ActionResult<void>> {
   await requireAdmin();
+  const dict = await getDictionary();
 
   const parsed = updateUserSchema.safeParse({
     id: formData.get("id"),
@@ -65,7 +63,7 @@ export async function updateUserAction(
   });
 
   if (!parsed.success) {
-    return validationError("Please check the form", fieldErrorsFrom(parsed.error));
+    return validationError(dict.validation.checkForm, fieldErrorsFrom(parsed.error, dict));
   }
 
   try {

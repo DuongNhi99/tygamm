@@ -4,6 +4,8 @@ import { canRecordSessions } from "@/lib/permissions";
 import { getClassById } from "@/services/class.service";
 import { listClassStudents } from "@/services/student.service";
 import { currentPeriod, parsePeriodParam } from "@/lib/utils";
+import { getDictionary } from "@/lib/i18n/server";
+import { interpolate } from "@/lib/i18n/translate";
 import { ClassStudents } from "@/components/classes/class-students";
 import { PeriodPicker } from "@/components/classes/period-picker";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -15,7 +17,12 @@ export default async function ClassStudentsPage({
   params: Promise<{ classId: string }>;
   searchParams: Promise<{ period?: string }>;
 }) {
-  const [{ classId }, query, user] = await Promise.all([params, searchParams, requireAuth()]);
+  const [{ classId }, query, user, dict] = await Promise.all([
+    params,
+    searchParams,
+    requireAuth(),
+    getDictionary(),
+  ]);
   const period = parsePeriodParam(query.period) ?? currentPeriod();
 
   const [klass, students] = await Promise.all([
@@ -29,9 +36,11 @@ export default async function ClassStudentsPage({
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-lg font-semibold text-ink">
-          Students
+          {dict.common.students}
           <span className="ml-2 text-sm font-normal text-ink-muted">
-            {students.filter((s) => s.member_status === "ACTIVE").length} active
+            {interpolate(dict.classes.students.activeCount, {
+              count: students.filter((s) => s.member_status === "ACTIVE").length,
+            })}
           </span>
         </h2>
         <PeriodPicker />
@@ -40,8 +49,8 @@ export default async function ClassStudentsPage({
       {students.length === 0 ? (
         <EmptyState
           icon={<span aria-hidden="true">👥</span>}
-          title="No students yet"
-          description="Add a student by email or phone number to start recording lessons."
+          title={dict.classes.students.noneTitle}
+          description={dict.classes.students.noneBody}
         />
       ) : (
         <ClassStudents

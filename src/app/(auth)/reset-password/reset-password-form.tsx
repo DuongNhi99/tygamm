@@ -4,9 +4,11 @@ import { useActionState } from "react";
 import { updatePasswordAction } from "../actions";
 import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/field";
+import { useDict } from "@/lib/i18n/client";
 
 export function ResetPasswordForm() {
   const [state, formAction, isPending] = useActionState(updatePasswordAction, null);
+  const dict = useDict();
 
   const fieldErrors = state && !state.ok ? (state.fieldErrors ?? {}) : {};
   const formError = state && !state.ok && !state.fieldErrors ? state.error : null;
@@ -22,7 +24,7 @@ export function ResetPasswordForm() {
         </div>
       )}
 
-      <Field label="New password" htmlFor="password" error={fieldErrors.password} required>
+      <Field label={dict.auth.newPassword} htmlFor="password" error={fieldErrors.password} required>
         <Input
           id="password"
           name="password"
@@ -34,7 +36,7 @@ export function ResetPasswordForm() {
       </Field>
 
       <Field
-        label="Confirm new password"
+        label={dict.auth.confirmNewPassword}
         htmlFor="confirmPassword"
         error={fieldErrors.confirmPassword}
         required
@@ -50,7 +52,7 @@ export function ResetPasswordForm() {
       </Field>
 
       <Button type="submit" size="lg" loading={isPending} className="w-full">
-        Update password
+        {dict.auth.updatePassword}
       </Button>
     </form>
   );

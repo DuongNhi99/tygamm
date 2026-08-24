@@ -3,6 +3,8 @@
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/layout/logo";
+import { useDict } from "@/lib/i18n/client";
+import { interpolate } from "@/lib/i18n/translate";
 
 /**
  * Friendly failure page. The real error goes to the console for us; the user
@@ -15,6 +17,8 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const dict = useDict();
+
   useEffect(() => {
     console.error("[tygamm] render error:", error);
   }, [error]);
@@ -24,16 +28,16 @@ export default function GlobalError({
       <Logo />
 
       <div className="space-y-2">
-        <h1 className="text-2xl font-semibold tracking-tight text-ink">Something went wrong</h1>
-        <p className="max-w-sm text-sm text-ink-muted">
-          We could not load this page. Please try again.
-        </p>
+        <h1 className="text-2xl font-semibold tracking-tight text-ink">{dict.errorPage.title}</h1>
+        <p className="max-w-sm text-sm text-ink-muted">{dict.errorPage.body}</p>
         {error.digest && (
-          <p className="font-mono text-xs text-ink-subtle">Reference: {error.digest}</p>
+          <p className="font-mono text-xs text-ink-subtle">
+            {interpolate(dict.errorPage.reference, { digest: error.digest })}
+          </p>
         )}
       </div>
 
-      <Button onClick={reset}>Try again</Button>
+      <Button onClick={reset}>{dict.common.tryAgain}</Button>
     </div>
   );
 }

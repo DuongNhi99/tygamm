@@ -14,9 +14,12 @@ import { Dropdown, DropdownItem } from "@/components/ui/dropdown";
 import { Field, Input, Select } from "@/components/ui/field";
 import { Table, TBody, TD, TH, THead, TR, TableWrapper } from "@/components/ui/table";
 import { updateUserAction } from "@/app/(dashboard)/students/actions";
+import { useDict } from "@/lib/i18n/client";
+import { interpolate } from "@/lib/i18n/translate";
 import type { TeacherSummary } from "@/types/student";
 
 export function TeachersTable({ teachers }: { teachers: TeacherSummary[] }) {
+  const dict = useDict();
   const [editing, setEditing] = useState<TeacherSummary | null>(null);
 
   return (
@@ -25,13 +28,13 @@ export function TeachersTable({ teachers }: { teachers: TeacherSummary[] }) {
         <Table>
           <THead>
             <TR className="hover:bg-transparent">
-              <TH>Name</TH>
-              <TH>Email</TH>
-              <TH>Phone</TH>
-              <TH className="text-center">Classes</TH>
-              <TH className="text-center">Students</TH>
-              <TH>Status</TH>
-              <TH className="w-12 text-right">Actions</TH>
+              <TH>{dict.students.name}</TH>
+              <TH>{dict.common.email}</TH>
+              <TH>{dict.common.phone}</TH>
+              <TH className="text-center">{dict.common.classes}</TH>
+              <TH className="text-center">{dict.common.students}</TH>
+              <TH>{dict.common.status}</TH>
+              <TH className="w-12 text-right">{dict.common.actions}</TH>
             </TR>
           </THead>
           <TBody>
@@ -57,7 +60,9 @@ export function TeachersTable({ teachers }: { teachers: TeacherSummary[] }) {
                 </TD>
                 <TD className="text-right">
                   <Dropdown
-                    label={`Actions for ${teacher.full_name}`}
+                    label={interpolate(dict.classes.students.actionsFor, {
+                      name: teacher.full_name,
+                    })}
                     trigger={<MoreVertical className="h-4 w-4" />}
                   >
                     {(close) => (
@@ -68,7 +73,7 @@ export function TeachersTable({ teachers }: { teachers: TeacherSummary[] }) {
                           onClick={close}
                           className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-ink hover:bg-muted"
                         >
-                          View classes
+                          {dict.teachers.viewClasses}
                         </Link>
                         <DropdownItem
                           onClick={() => {
@@ -77,7 +82,7 @@ export function TeachersTable({ teachers }: { teachers: TeacherSummary[] }) {
                           }}
                         >
                           <Pencil className="h-4 w-4" />
-                          Edit teacher
+                          {dict.teachers.editTeacher}
                         </DropdownItem>
                       </>
                     )}
@@ -105,13 +110,13 @@ export function TeachersTable({ teachers }: { teachers: TeacherSummary[] }) {
 
               <dl className="grid grid-cols-2 gap-3 border-t border-line pt-3 text-sm">
                 <div>
-                  <dt className="text-xs text-ink-subtle">Classes</dt>
+                  <dt className="text-xs text-ink-subtle">{dict.common.classes}</dt>
                   <dd className="mt-0.5 font-medium text-ink tabular-nums">
                     {teacher.class_count}
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-xs text-ink-subtle">Students</dt>
+                  <dt className="text-xs text-ink-subtle">{dict.common.students}</dt>
                   <dd className="mt-0.5 font-medium text-ink tabular-nums">
                     {teacher.student_count}
                   </dd>
@@ -125,7 +130,7 @@ export function TeachersTable({ teachers }: { teachers: TeacherSummary[] }) {
                   className="flex-1"
                   onClick={() => setEditing(teacher)}
                 >
-                  Edit
+                  {dict.common.edit}
                 </Button>
               </div>
             </Card>
@@ -150,13 +155,14 @@ function EditUserDialog({
   onClose: () => void;
 }) {
   const router = useRouter();
+  const dict = useDict();
   const [state, formAction, isPending] = useActionState(updateUserAction, null);
 
   useEffect(() => {
     if (!state) return;
 
     if (state.ok) {
-      toast.success("Teacher updated");
+      toast.success(dict.teachers.updated);
       onClose();
       router.refresh();
     } else if (!state.fieldErrors) {
@@ -171,15 +177,15 @@ function EditUserDialog({
     <Dialog
       open={user !== null}
       onClose={onClose}
-      title="Edit teacher"
+      title={dict.teachers.editTeacher}
       description={user?.email ?? undefined}
       footer={
         <>
           <Button variant="outline" onClick={onClose} disabled={isPending}>
-            Cancel
+            {dict.common.cancel}
           </Button>
           <Button type="submit" form="edit-user-form" loading={isPending}>
-            Save changes
+            {dict.common.saveChanges}
           </Button>
         </>
       }
@@ -188,24 +194,29 @@ function EditUserDialog({
         <form id="edit-user-form" key={user.id} action={formAction} className="space-y-4" noValidate>
           <input type="hidden" name="id" value={user.id} />
 
-          <Field label="Full name" htmlFor="eu_full_name" error={fieldErrors.full_name} required>
+          <Field
+            label={dict.common.fullName}
+            htmlFor="eu_full_name"
+            error={fieldErrors.full_name}
+            required
+          >
             <Input id="eu_full_name" name="full_name" defaultValue={user.full_name} required />
           </Field>
 
-          <Field label="Phone" htmlFor="eu_phone" error={fieldErrors.phone}>
+          <Field label={dict.common.phone} htmlFor="eu_phone" error={fieldErrors.phone}>
             <Input id="eu_phone" name="phone" type="tel" defaultValue={user.phone ?? ""} />
           </Field>
 
           <Field
-            label="Status"
+            label={dict.common.status}
             htmlFor="eu_status"
             error={fieldErrors.status}
-            hint="A deactivated teacher cannot sign in, but their classes and history are kept."
+            hint={dict.teachers.statusHint}
             required
           >
             <Select id="eu_status" name="status" defaultValue={user.status}>
-              <option value="ACTIVE">Active</option>
-              <option value="INACTIVE">Inactive</option>
+              <option value="ACTIVE">{dict.common.active}</option>
+              <option value="INACTIVE">{dict.common.inactive}</option>
             </Select>
           </Field>
         </form>

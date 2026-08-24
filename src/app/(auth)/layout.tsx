@@ -1,11 +1,14 @@
 import Link from "next/link";
 import { Logo } from "@/components/layout/logo";
+import { getDictionary } from "@/lib/i18n/server";
 
-export default function AuthLayout({ children }: { children: React.ReactNode }) {
+export default async function AuthLayout({ children }: { children: React.ReactNode }) {
+  const dict = await getDictionary();
+
   return (
     <div className="flex min-h-dvh flex-col bg-canvas">
       <header className="px-4 py-6 sm:px-8">
-        <Link href="/login" className="inline-block" aria-label="Tygamm home">
+        <Link href="/login" className="inline-block" aria-label={dict.app.home}>
           <Logo />
         </Link>
       </header>
@@ -15,7 +18,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       </main>
 
       <footer className="px-4 py-6 text-center text-xs text-ink-subtle">
-        Tygamm · Class management for music teaching centres
+        {dict.app.name} · {dict.app.tagline}
       </footer>
     </div>
   );
