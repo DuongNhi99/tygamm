@@ -6,8 +6,8 @@ import { cn } from "@/lib/utils";
 
 type Theme = "light" | "dark" | "system";
 
-const STORAGE_KEY = "abbaguitar-theme";
-const CHANGE_EVENT = "abbaguitar-theme-change";
+const STORAGE_KEY = "tygamm-theme";
+const CHANGE_EVENT = "tygamm-theme-change";
 
 const OPTIONS: Array<{ value: Theme; label: string; icon: typeof Sun }> = [
   { value: "light", label: "Light", icon: Sun },
